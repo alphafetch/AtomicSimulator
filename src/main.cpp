@@ -78,17 +78,17 @@ int main() {
         }
 
         // Change position based on atomic velocity
-        for (auto& atom : atoms) {
-            atom.pos.x += atom.vel.x;
-            atom.pos.y += atom.vel.y;
-            atom.pos.z += atom.vel.z;
+        for (size_t i = 0; i < atoms.size(); i++) {
+            atoms[i].pos.x += atoms[i].vel.x;
+            atoms[i].pos.y += atoms[i].vel.y;
+            atoms[i].pos.z += atoms[i].vel.z;
 
-            if (atom.pos.x >= WINDOW_WIDTH - (ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS) || atom.pos.x <= 0) {
-                atom.vel.x *= -1;
+            if (atoms[i].pos.x >= WINDOW_WIDTH - (ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS) || atoms[i].pos.x <= 0) {
+                atoms[i].vel.x *= -1;
             }
 
-            if (atom.pos.y >= WINDOW_HEIGHT - (ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS) || atom.pos.y <= 0) {
-                atom.vel.y *= -1;
+            if (atoms[i].pos.y >= WINDOW_HEIGHT - (ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS) || atoms[i].pos.y <= 0) {
+                atoms[i].vel.y *= -1;
             }
         }
 
@@ -112,40 +112,40 @@ int main() {
         }
 
         // Apply friction and decay to each atom
-        for (auto& atom : atoms) {
-            atom.vel = atom.vel * ATOMIC_FRICTION;
-            applyDecay(rng, atom, elementTable);
+        for (size_t i = 0; i < atoms.size(); i++) {
+            atoms[i].vel = atoms[i].vel * ATOMIC_FRICTION;
+            applyDecay(rng, atoms[i], elementTable);
         }
         
         auto molecules = buildMolecules(atoms, parent);
         
         // Log to a CSV and Console if needed
-        for (auto& atom : atoms) {
+        for (size_t i = 0; i < atoms.size(); i++) {
             if (DEBUG_CONSOLE == 1 || DEBUG_CONSOLE == 3) { 
                 cout 
-                    << "Atom " << atom.id << " - " << atom.element
-                    << ": X, Y, Z = " << atom.pos.x << ", " << atom.pos.y << ", " << atom.pos.z << 
-                    " - VX, VY, VZ = " << atom.vel.x << ", " << atom.vel.y << ", " << atom.vel.z 
-                    << " - Mass: " << atom.mass
+                    << "Atom " << atoms[i].id << " - " << atoms[i].element
+                    << ": X, Y, Z = " << atoms[i].pos.x << ", " << atoms[i].pos.y << ", " << atoms[i].pos.z << 
+                    " - VX, VY, VZ = " << atoms[i].vel.x << ", " << atoms[i].vel.y << ", " << atoms[i].vel.z 
+                    << " - Mass: " << atoms[i].mass
                     << "\n";
             }
 
             if (DEBUG_CONSOLE == 2 || DEBUG_CONSOLE == 3) {
                 cout
-                    << atom.id << ": "
-                    << find(parent, atom.id) << "\n";
+                    << atoms[i].id << ": "
+                    << find(parent, i) << "\n";
             }
 
             if (DEBUG_CSV) {
-                Molecule& molecule = molecules[find(parent, atom.id)];
+                Molecule& molecule = molecules[find(parent, i)];
                 csvstream
                     << frame << ","
-                    << atom.id << ","
-                    << atom.pos.x << "," << atom.pos.y << "," << atom.pos.z << ","
-                    << atom.vel.x << "," << atom.vel.y << "," << atom.vel.z << ","
-                    << atom.mass << ","
-                    << atom.element << ","
-                    << find(parent, atom.id) << ","
+                    << atoms[i].id << ","
+                    << atoms[i].pos.x << "," << atoms[i].pos.y << "," << atoms[i].pos.z << ","
+                    << atoms[i].vel.x << "," << atoms[i].vel.y << "," << atoms[i].vel.z << ","
+                    << atoms[i].mass << ","
+                    << atoms[i].element << ","
+                    << find(parent, i) << ","
                     << molecule.formula << ","
                     << molecule.mass
                     << "\n";
@@ -166,15 +166,15 @@ int main() {
         BeginDrawing();
         ClearBackground(BLACK);
 
-        for (auto& atom : atoms) {
-            DrawCircleLinesV(Vector2({atom.pos.x, atom.pos.y}), ELECTRON_FLOAT_RADIUS, Fade(RED, 0.5f));
+        for (size_t i = 0; i < atoms.size(); i++) {
+            DrawCircleLinesV(Vector2({atoms[i].pos.x, atoms[i].pos.y}), ELECTRON_FLOAT_RADIUS, Fade(RED, 0.5f));
 
             // Add labels to each element
-            Molecule& molecule = molecules[find(parent, atom.id)];
+            Molecule& molecule = molecules[find(parent, i)];
             if (molecule.atomCount == 1) {
-                const char* sym = atom.element.c_str();
+                const char* sym = atoms[i].element.c_str();
                 int textWidth = MeasureText(sym, FONT_SIZE);
-                DrawText(sym, atom.pos.x - (textWidth / 2), atom.pos.y + RELATIVE_TEXT_HEIGHT_SOLO, FONT_SIZE, Fade(GRAY, 0.8f));
+                DrawText(sym, atoms[i].pos.x - (textWidth / 2), atoms[i].pos.y + RELATIVE_TEXT_HEIGHT_SOLO, FONT_SIZE, Fade(GRAY, 0.8f));
             } else if (!molecule.labelDrawn) {
                 std::string form = molecule.formula;
                 std::string label = "[ " + form + "]";
@@ -184,20 +184,20 @@ int main() {
                 molecule.labelDrawn = true;
             }
         
-            for (int j = 0; j < atom.subatomTier[2]; j++) {
-                float theta = j * ((2 * std::numbers::pi) / atom.subatomTier[2]) + frame * ELECTRON_ORBIT_SPEED;
+            for (int j = 0; j < atoms[i].subatomTier[2]; j++) {
+                float theta = j * ((2 * std::numbers::pi) / atoms[i].subatomTier[2]) + frame * ELECTRON_ORBIT_SPEED;
 
-                vec::Vector2 pt = getPointOfCenter(vec::Vector2(atom.pos.x, atom.pos.y), ELECTRON_FLOAT_RADIUS, theta);
+                vec::Vector2 pt = getPointOfCenter(vec::Vector2(atoms[i].pos.x, atoms[i].pos.y), ELECTRON_FLOAT_RADIUS, theta);
 
                 DrawCircleV(Vector2({pt.x, pt.y}), ELECTRON_RENDER_RADIUS, RED);
             }
 
-            for (int j = 0; j < atom.subatomTier[1] + atom.subatomTier[0]; j++) {
-                float theta = j * ((2 * std::numbers::pi) / (atom.subatomTier[1] + atom.subatomTier[0]));
+            for (int j = 0; j < atoms[i].subatomTier[1] + atoms[i].subatomTier[0]; j++) {
+                float theta = j * ((2 * std::numbers::pi) / (atoms[i].subatomTier[1] + atoms[i].subatomTier[0]));
 
-                vec::Vector2 pt = getPointOfCenter(vec::Vector2(atom.pos.x, atom.pos.y), NUCLEAR_FLOAT_RADIUS, theta);
+                vec::Vector2 pt = getPointOfCenter(vec::Vector2(atoms[i].pos.x, atoms[i].pos.y), NUCLEAR_FLOAT_RADIUS, theta);
 
-                if (j < atom.subatomTier[1]) { DrawCircleV(Vector2({pt.x, pt.y}), SUBATOMIC_RENDER_RADIUS, GRAY); }
+                if (j < atoms[i].subatomTier[1]) { DrawCircleV(Vector2({pt.x, pt.y}), SUBATOMIC_RENDER_RADIUS, GRAY); }
                 else { DrawCircleV(Vector2({pt.x, pt.y}), SUBATOMIC_RENDER_RADIUS, GREEN); }
             }
         }

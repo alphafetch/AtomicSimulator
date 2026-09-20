@@ -5,15 +5,15 @@
 
 std::unordered_map<int, Molecule> buildMolecules(std::vector<Atom>& atoms, std::vector<int>& parent) {
     std::unordered_map<int, Molecule> molecules;
-    for (auto& atom : atoms) {
-        int root = find(parent, atom.id);
+    for (size_t i = 0; i < atoms.size(); i++) {
+        int root = find(parent, i);
 
-        molecules[root].mass += atom.mass;
+        molecules[root].mass += atoms[i].mass;
 
-        molecules[root].composition[atom.element]++;
+        molecules[root].composition[atoms[i].element]++;
 
-        molecules[root].posSum.x += atom.pos.x;
-        molecules[root].posSum.y += atom.pos.y;
+        molecules[root].posSum.x += atoms[i].pos.x;
+        molecules[root].posSum.y += atoms[i].pos.y;
 
         molecules[root].atomCount++;
     }
