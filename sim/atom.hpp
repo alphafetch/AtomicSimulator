@@ -24,6 +24,9 @@ struct Atom {
     int protons;
     int neutrons;
 
+    // Atom marked for removal?
+    bool markedForRemoval = false;
+
     // Element symbol (e.g. "He"), set via the periodic table lookup after
     // construction. "?" means no match was found (e.g. 0 protons).
     std::string element = "?";

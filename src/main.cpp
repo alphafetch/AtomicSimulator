@@ -70,6 +70,7 @@ int main() {
     // Other miscellaneous initializations
     int frame = 0;
     std::vector<int> parent(atoms.size());
+    std::vector<std::pair<size_t, size_t>> toFuse;
 
     while (!WindowShouldClose()) {
         // Reset the parent array
@@ -99,6 +100,9 @@ int main() {
 
                 if (dist < BOND_DIST) {
                     bond(parent, i, j);
+                    if (atoms[i].protons + atoms[j].protons < FUSION_PROTON_MAX) {
+                        toFuse.push_back(std::pair<size_t, size_t>{i, j});
+                    }
                 }
 
                 vec::Vector2 mag = getForceMagnitude(dist, atoms[i], atoms[j]);
@@ -109,6 +113,23 @@ int main() {
                 atoms[j].vel.x += mag.x;
                 atoms[j].vel.y += mag.y;
             }
+        }
+
+        for (size_t i = 0; i < toFuse.size(); i++) {
+            atoms[toFuse[i].first].protons += atoms[toFuse[i].second].protons;
+            atoms[toFuse[i].first].neutrons += atoms[toFuse[i].second].neutrons;
+            atoms[toFuse[i].second].markedForRemoval = true;
+        }
+
+        for (int i = static_cast<int>(atoms.size() - 1); i >= 0; i--) {
+            if (atoms[i].markedForRemoval) {
+                atoms.erase(atoms.begin() + i);
+            }
+        }
+
+        toFuse.clear();
+        for (size_t i = 0; i < atoms.size(); i++) {
+            atoms[i].refreshDerivedFields(elementTable);
         }
 
         // Apply friction and decay to each atom
