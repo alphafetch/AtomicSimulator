@@ -22,7 +22,7 @@ float getAtomicDistance(Atom a, Atom b) {
         + ((b.pos.y - a.pos.y) * (b.pos.y - a.pos.y)));
 }
 
-vec::Vector2 getForceMagnitude(float dist, Atom a, Atom b) {
+vec::Vector2 getForceMagnitude(float dist, Atom a, Atom b, Settings& settings) {
     if (dist == 0) {
         dist = 1.0f;
     }
@@ -31,10 +31,10 @@ vec::Vector2 getForceMagnitude(float dist, Atom a, Atom b) {
     float dy = b.pos.y - a.pos.y;
     vec::Vector2 dir(dx / dist, dy / dist);
 
-    if (dist < FORCE_MIN_DIST) {
-        return dir * FORCE_STRENGTH;
-    } else if (dist > FORCE_MIN_DIST && dist < FORCE_MAX_DIST) {
-        return (dir * -1.0f) * FORCE_STRENGTH;
+    if (dist < settings.forceMinDist) {
+        return dir * settings.forceStrength;
+    } else if (dist > settings.forceMinDist && dist < settings.forceMaxDist) {
+        return (dir * -1.0f) * settings.forceStrength;
     } else {
         return vec::Vector2(0.0f, 0.0f);
     }

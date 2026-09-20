@@ -8,6 +8,7 @@
 
 #include "../core/vector.hpp"
 #include "../core/elements.hpp"
+#include "../src/app.hpp"
 
 struct Atom {
     int id;
@@ -37,6 +38,6 @@ struct Atom {
     std::array<int, 3> getSubatomTier();
 };
 
-void applyDecay(std::mt19937_64& rng, Atom& atom, std::unordered_map<int, Element>& elementTable);
+void applyDecay(std::mt19937_64& rng, Atom& atom, std::unordered_map<int, Element>& elementTable, Settings& settings);
 
 #endif

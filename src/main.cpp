@@ -22,12 +22,15 @@
 #include "../sim/bondFind.hpp"
 #include "../sim/molecule.hpp"
 
+#include "app.hpp"
+
 using std::cout;
 
 int main() {
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
     SetTargetFPS(60);
     auto elementTable = loadElementTable("data/elements.csv");
+    Settings settings;
 
     std::random_device rd;
     unsigned int seed = rd();
@@ -100,14 +103,14 @@ int main() {
             for (size_t j = i + 1; j < atoms.size(); j++) {
                 float dist = getAtomicDistance(atoms[i], atoms[j]);
 
-                if (dist < BOND_DIST) {
+                if (dist < settings.bondDist) {
                     bond(parent, i, j);
-                    if (atoms[i].protons + atoms[j].protons < FUSION_PROTON_MAX) {
+                    if (atoms[i].protons + atoms[j].protons < settings.fusionProtonMax) {
                         toFuse.push_back(std::pair<size_t, size_t>{i, j});
                     }
                 }
 
-                vec::Vector2 mag = getForceMagnitude(dist, atoms[i], atoms[j]);
+                vec::Vector2 mag = getForceMagnitude(dist, atoms[i], atoms[j], settings);
 
                 atoms[i].vel.x -= mag.x;
                 atoms[i].vel.y -= mag.y;
@@ -136,8 +139,8 @@ int main() {
 
         // Apply friction and decay to each atom
         for (size_t i = 0; i < atoms.size(); i++) {
-            atoms[i].vel = atoms[i].vel * ATOMIC_FRICTION;
-            applyDecay(rng, atoms[i], elementTable);
+            atoms[i].vel = atoms[i].vel * settings.atomicFriction;
+            applyDecay(rng, atoms[i], elementTable, settings);
         }
         
         auto molecules = buildMolecules(atoms, parent);
@@ -196,19 +199,19 @@ int main() {
             Molecule& molecule = molecules[find(parent, i)];
             if (molecule.atomCount == 1) {
                 const char* sym = atoms[i].element.c_str();
-                int textWidth = MeasureText(sym, FONT_SIZE);
-                DrawText(sym, atoms[i].pos.x - (textWidth / 2), atoms[i].pos.y + RELATIVE_TEXT_HEIGHT_SOLO, FONT_SIZE, Fade(GRAY, 0.8f));
+                int textWidth = MeasureText(sym, settings.fontSize);
+                DrawText(sym, atoms[i].pos.x - (textWidth / 2), atoms[i].pos.y + RELATIVE_TEXT_HEIGHT_SOLO, settings.fontSize, Fade(GRAY, 0.8f));
             } else if (!molecule.labelDrawn) {
                 std::string form = molecule.formula;
                 std::string label = "[ " + form + "]";
                 const char* moleculeLabel = label.c_str();
-                int textWidth = MeasureText(moleculeLabel, FONT_SIZE);
-                DrawText(moleculeLabel, molecule.centeroid.x - (textWidth / 2), molecule.centeroid.y + RELATIVE_TEXT_HEIGHT_MOLECULE, FONT_SIZE, Fade(GRAY, 0.8f));
+                int textWidth = MeasureText(moleculeLabel, settings.fontSize);
+                DrawText(moleculeLabel, molecule.centeroid.x - (textWidth / 2), molecule.centeroid.y + RELATIVE_TEXT_HEIGHT_MOLECULE, settings.fontSize, Fade(GRAY, 0.8f));
                 molecule.labelDrawn = true;
             }
         
             for (int j = 0; j < atoms[i].subatomTier[2]; j++) {
-                float theta = j * ((2 * std::numbers::pi) / atoms[i].subatomTier[2]) + frame * ELECTRON_ORBIT_SPEED;
+                float theta = j * ((2 * std::numbers::pi) / atoms[i].subatomTier[2]) + frame * settings.electronOrbitSpeed;
 
                 vec::Vector2 pt = getPointOfCenter(vec::Vector2(atoms[i].pos.x, atoms[i].pos.y), ELECTRON_FLOAT_RADIUS, theta);
 

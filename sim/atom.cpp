@@ -64,11 +64,11 @@ std::array<int, 3> Atom::getSubatomTier() {
     return arr;
 }
 
-void applyDecay(std::mt19937_64& rng, Atom& atom, std::unordered_map<int, Element>& elementTable) {
+void applyDecay(std::mt19937_64& rng, Atom& atom, std::unordered_map<int, Element>& elementTable, Settings& settings) {
     std::uniform_real_distribution<float> dist(0, 1);
 
     float roll = dist(rng);
-    if (roll <= DECAY_CHANCE && atom.protons > DECAY_PROTON_THRESHOLD) {
+    if (roll <= settings.decayChance && atom.protons > settings.decayProtonThreshold) {
         atom.protons -= 2;
         atom.neutrons -= 2;
         atom.refreshDerivedFields(elementTable);
