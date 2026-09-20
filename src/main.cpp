@@ -6,6 +6,7 @@
 #include <numbers>
 #include <vector>
 #include <array>
+#include <cmath>
 
 #include "raylib.h"
 
@@ -29,13 +30,19 @@ int main() {
     std::random_device rd;
     unsigned int seed = rd();
     std::mt19937_64 rng(seed);
-    std::uniform_int_distribution<int> proton_ct(1, 118);
+
+    std::vector<double> weights(118);
+    for (size_t i = 0; i < weights.size(); i++) {
+        weights[i] = sqrt(static_cast<double>(elementTable.at(i + 1).abundancePpm));
+    }
+
+    std::discrete_distribution<int> proton_ct(weights.begin(), weights.end());
 
     std::vector<Atom> atoms; 
 
     // Initalize particles
     for (int i = 0; i < COUNT; i++) {
-        int pct = proton_ct(rng);
+        int pct = proton_ct(rng) + 1;
         auto elem = elementTable.at(pct);
         int nct = elem.neutrons;
 
@@ -46,6 +53,7 @@ int main() {
         atoms.push_back(atom);
     }
 
+    // Initialize logging
     std::ofstream csvstream("logs/atoms-" + std::to_string(seed) + ".csv");
     if (!csvstream.is_open()) {
         std::cerr << "Failed to initialize logging at logs/atoms.csv.\n";
@@ -58,6 +66,7 @@ int main() {
         csvstream << "frame,id,x,y,z,vx,vy,vz,mass,element,parent,molecule_formula,molecule_mass\n"; 
     }
 
+    // Other miscellaneous initializations
     int frame = 0;
     std::vector<int> parent(atoms.size());
 

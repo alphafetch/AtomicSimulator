@@ -31,6 +31,9 @@ std::unordered_map<int, Element> loadElementTable(const std::string& path) {
         std::getline(ss, field, ','); // neutrons column
         el.neutrons = std::stoi(field);
 
+        std::getline(ss, field, ','); // abundance_ppm column
+        el.abundancePpm = std::stol(field);
+
         table[protons] = el;
     }
 
