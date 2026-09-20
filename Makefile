@@ -11,3 +11,4 @@ $(TARGET): $(SRC)
 
 clean:
 	rm -f $(TARGET)
+	python clear-logs.py
