@@ -54,17 +54,19 @@ int main() {
     }
 
     // Initialize logging
-    std::ofstream csvstream("atoms-" + std::to_string(seed) + ".csv");
-    if (!csvstream.is_open()) {
-        std::cerr << "Failed to initialize logging at atoms-#.csv.\n";
-        exit(EXIT_FAILURE);
-    }
+    std::ofstream csvstream;
+    if (DEBUG_CSV) {
+        csvstream.open("atoms-" + std::to_string(seed) + ".csv");
+        if (!csvstream.is_open()) {
+            std::cerr << "Failed to initialize logging at atoms-#.csv.\n";
+            exit(EXIT_FAILURE);
+        }
 
-    if (DEBUG_CONSOLE == 1 || DEBUG_CONSOLE == 3) { cout << "SEED: " << seed << "\n"; }
-    if (DEBUG_CSV) { 
         csvstream << "# SEED: " << seed << "\n";
         csvstream << "frame,id,x,y,z,vx,vy,vz,mass,element,parent,molecule_formula,molecule_mass\n"; 
     }
+
+    if (DEBUG_CONSOLE == 1 || DEBUG_CONSOLE == 3) { cout << "SEED: " << seed << "\n"; }
 
     // Other miscellaneous initializations
     int frame = 0;
