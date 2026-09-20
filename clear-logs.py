@@ -2,15 +2,10 @@ from pathlib import Path
 import shutil
 
 def clear_logs():
-    path = Path("logs/")
+    path = Path("./")
 
-    for item in path.iterdir():
-        try:
-            if item.is_file() or item.is_symlink():
-                item.unlink()
-            elif item.is_dir():
-                shutil.rmtree(item)
-        except Exception as e:
-            print(f"Failed to delete {item}. Reason: {e}")
+    for item in path.glob('atoms-*.csv'):
+        if item.is_file():
+            item.unlink()
 
 clear_logs()

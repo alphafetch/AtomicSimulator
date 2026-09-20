@@ -54,9 +54,9 @@ int main() {
     }
 
     // Initialize logging
-    std::ofstream csvstream("logs/atoms-" + std::to_string(seed) + ".csv");
+    std::ofstream csvstream("atoms-" + std::to_string(seed) + ".csv");
     if (!csvstream.is_open()) {
-        std::cerr << "Failed to initialize logging at logs/atoms.csv.\n";
+        std::cerr << "Failed to initialize logging at atoms-#.csv.\n";
         exit(EXIT_FAILURE);
     }
 
