@@ -4,7 +4,7 @@ INCLUDES = -I/ucrt64/include
 LIBS = -L/ucrt64/lib -lraylib -lopengl32 -lgdi32 -lwinmm
 
 SRC := $(shell find . -name "*.cpp")
-TARGET = ParticleSim
+TARGET = AtomicSim
 LOGTARGET := $(wildcard atoms-*.csv)
 
 $(TARGET): $(SRC)
