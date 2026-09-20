@@ -8,4 +8,3 @@
 ## How to use
 
 1. Run the executable
-2. Clear logs using `python clear-logs.py` in the directory alongside the `clear-logs.py` file.
