@@ -9,6 +9,8 @@
 #include <cmath>
 
 #include "raylib.h"
+#define RAYGUI_IMPLEMENTATION
+#include "../external/raygui.h"
 
 #include "../core/constants.hpp"
 #include "../core/utils.hpp"
