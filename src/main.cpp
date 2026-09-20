@@ -17,6 +17,7 @@
 #include "../sim/atom.hpp"
 #include "../sim/utils.hpp"
 #include "../sim/bondFind.hpp"
+#include "../sim/molecule.hpp"
 
 using std::cout;
 
@@ -54,7 +55,7 @@ int main() {
     if (DEBUG_CONSOLE == 1 || DEBUG_CONSOLE == 3) { cout << "SEED: " << seed << "\n"; }
     if (DEBUG_CSV) { 
         csvstream << "# SEED: " << seed << "\n";
-        csvstream << "frame,id,x,y,z,vx,vy,vz,mass,element,parent\n"; 
+        csvstream << "frame,id,x,y,z,vx,vy,vz,mass,element,parent,molecule_formula,molecule_mass\n"; 
     }
 
     int frame = 0;
@@ -100,6 +101,8 @@ int main() {
             }
         }
         
+        auto molecules = buildMolecules(atoms, parent);
+
         // Apply friction to each atom
         for (auto& atom : atoms) {
             atom.vel = atom.vel * ATOMIC_FRICTION;
@@ -123,6 +126,7 @@ int main() {
             }
 
             if (DEBUG_CSV) {
+                Molecule& molecule = molecules[find(parent, atom.id)];
                 csvstream
                     << frame << ","
                     << atom.id << ","
@@ -130,7 +134,19 @@ int main() {
                     << atom.vel.x << "," << atom.vel.y << "," << atom.vel.z << ","
                     << atom.mass << ","
                     << atom.element << ","
-                    << find(parent, atom.id)
+                    << find(parent, atom.id) << ","
+                    << molecule.formula << ","
+                    << molecule.mass
+                    << "\n";
+            }
+        }
+
+        if (DEBUG_CONSOLE == 4 || DEBUG_CONSOLE == 3) {
+            for (auto& entry : molecules) {
+                Molecule& molecule = entry.second;
+                cout
+                    << "Molecule (root " << entry.first << "): " << molecule.formula
+                    << " - Mass: " << molecule.mass
                     << "\n";
             }
         }
@@ -143,9 +159,17 @@ int main() {
             DrawCircleLinesV(Vector2({atom.pos.x, atom.pos.y}), ELECTRON_FLOAT_RADIUS, Fade(RED, 0.5f));
 
             // Add labels to each element
-            const char* sym = atom.element.c_str();
-            int textWidth = MeasureText(sym, FONT_SIZE);
-            DrawText(sym, atom.pos.x - (textWidth / 2), atom.pos.y + RELATIVE_TEXT_HEIGHT, FONT_SIZE, Fade(GRAY, 0.8f));
+            Molecule& molecule = molecules[find(parent, atom.id)];
+            if (molecule.atomCount == 1) {
+                const char* sym = atom.element.c_str();
+                int textWidth = MeasureText(sym, FONT_SIZE);
+                DrawText(sym, atom.pos.x - (textWidth / 2), atom.pos.y + RELATIVE_TEXT_HEIGHT_SOLO, FONT_SIZE, Fade(GRAY, 0.8f));
+            } else if (!molecule.labelDrawn) {
+                const char* form = molecule.formula.c_str();
+                int textWidth = MeasureText(form, FONT_SIZE);
+                DrawText(form, molecule.centeroid.x - (textWidth / 2), molecule.centeroid.y + RELATIVE_TEXT_HEIGHT_MOLECULE, FONT_SIZE, Fade(GRAY, 0.8f));
+                molecule.labelDrawn = true;
+            }
         
             for (int j = 0; j < atom.subatomTier[2]; j++) {
                 float theta = j * ((2 * std::numbers::pi) / atom.subatomTier[2]) + frame * ELECTRON_ORBIT_SPEED;

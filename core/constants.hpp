@@ -10,7 +10,7 @@
 #define NUCLEAR_FLOAT_RADIUS 3
 #define ELECTRON_RENDER_RADIUS 2
 #define ELECTRON_FLOAT_RADIUS 9
-#define ELECTRON_ORBIT_SPEED 0.01f
+#define ELECTRON_ORBIT_SPEED 0.015f
 #define ATOMIC_FRICTION 0.975f
 #define FORCE_STRENGTH 0.2f
 
@@ -22,13 +22,15 @@
 #define WINDOW_HEIGHT 600
 #define WINDOW_TITLE "Quantum Simulator"
 
-#define RELATIVE_TEXT_HEIGHT -20
+#define RELATIVE_TEXT_HEIGHT_SOLO -20
+#define RELATIVE_TEXT_HEIGHT_MOLECULE -35
 #define FONT_SIZE 8
 
 // DEBUG_CONSOLE: 0 - None
 //                1 - Log atomic positions
 //                2 - Log bonds
 //                3 - All logs
+//                4 - Molecule logging
 #define DEBUG_CONSOLE 0
 #define DEBUG_CSV 0
 
