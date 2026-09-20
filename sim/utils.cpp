@@ -22,7 +22,7 @@ float getAtomicDistance(Atom a, Atom b) {
         + ((b.pos.y - a.pos.y) * (b.pos.y - a.pos.y)));
 }
 
-vec::Vector2 getForceMagnitude(float dist, Atom a, Atom b, Settings& settings) {
+vec::Vector2 getForceMagnitude(float dist, Atom a, Atom b, const Settings& settings) {
     if (dist == 0) {
         dist = 1.0f;
     }

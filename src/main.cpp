@@ -22,7 +22,7 @@
 #include "../sim/bondFind.hpp"
 #include "../sim/molecule.hpp"
 
-#include "app.hpp"
+#include "../core/settings.hpp"
 
 using std::cout;
 

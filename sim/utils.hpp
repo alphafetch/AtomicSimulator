@@ -3,12 +3,12 @@
 
 #include "atom.hpp"
 #include "../core/vector.hpp"
-#include "../src/app.hpp"
+#include "../core/settings.hpp"
 
 vec::Vector2 getPointOfCenter(vec::Vector2 center, float radius, float rad);
 
 float getAtomicDistance(Atom a, Atom b);
 
-vec::Vector2 getForceMagnitude(float dist, Atom a, Atom b, Settings& settings);
+vec::Vector2 getForceMagnitude(float dist, Atom a, Atom b, const Settings& settings);
 
 #endif

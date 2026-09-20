@@ -64,7 +64,7 @@ std::array<int, 3> Atom::getSubatomTier() {
     return arr;
 }
 
-void applyDecay(std::mt19937_64& rng, Atom& atom, std::unordered_map<int, Element>& elementTable, Settings& settings) {
+void applyDecay(std::mt19937_64& rng, Atom& atom, std::unordered_map<int, Element>& elementTable, const Settings& settings) {
     std::uniform_real_distribution<float> dist(0, 1);
 
     float roll = dist(rng);

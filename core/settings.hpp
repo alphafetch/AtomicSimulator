@@ -1,12 +1,12 @@
-#ifndef SRC_APP_HPP
-#define SRC_APP_HPP
+#ifndef CORE_SETTINGS_HPP
+#define CORE_SETTINGS_HPP
 
 struct Settings {
     float atomicFriction = 0.975f;
     float forceStrength = 0.2f;
-    int forceMinDist = 15;
-    int forceMaxDist = 50;
-    int bondDist = 22;
+    float forceMinDist = 15;
+    float forceMaxDist = 50;
+    float bondDist = 22;
     float decayChance = 0.04f;
     int decayProtonThreshold = 84;
     int fusionProtonMax = 70;
