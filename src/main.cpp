@@ -16,6 +16,7 @@
 
 #include "../sim/atom.hpp"
 #include "../sim/utils.hpp"
+#include "../sim/bondFind.hpp"
 
 using std::cout;
 
@@ -50,15 +51,21 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    if (DEBUG_CONSOLE) { cout << "SEED: " << seed << "\n"; }
+    if (DEBUG_CONSOLE == 1 || DEBUG_CONSOLE == 3) { cout << "SEED: " << seed << "\n"; }
     if (DEBUG_CSV) { 
         csvstream << "# SEED: " << seed << "\n";
-        csvstream << "frame,id,x,y,z,vx,vy,vz,mass,element\n"; 
+        csvstream << "frame,id,x,y,z,vx,vy,vz,mass,element,parent\n"; 
     }
 
     int frame = 0;
+    std::vector<int> parent(atoms.size());
 
     while (!WindowShouldClose()) {
+        // Reset the parent array
+        for (size_t i = 0; i < parent.size(); i++) {
+            parent[i] = i;
+        }
+
         // Change position based on atomic velocity
         for (auto& atom : atoms) {
             atom.pos.x += atom.vel.x;
@@ -74,9 +81,15 @@ int main() {
             }
         }
 
+        // Apply bounces
         for (size_t i = 0; i < atoms.size(); i++) {
             for (size_t j = i + 1; j < atoms.size(); j++) {
                 float dist = getAtomicDistance(atoms[i], atoms[j]);
+
+                if (dist < BOND_DIST) {
+                    bond(parent, i, j);
+                }
+
                 vec::Vector2 mag = getForceMagnitude(dist, atoms[i], atoms[j]);
 
                 atoms[i].vel.x -= mag.x;
@@ -87,19 +100,26 @@ int main() {
             }
         }
         
+        // Apply friction to each atom
         for (auto& atom : atoms) {
             atom.vel = atom.vel * ATOMIC_FRICTION;
         }
         
         // Log to a CSV and Console if needed
         for (auto& atom : atoms) {
-            if (DEBUG_CONSOLE) { 
+            if (DEBUG_CONSOLE == 1 || DEBUG_CONSOLE == 3) { 
                 cout 
                     << "Atom " << atom.id << " - " << atom.element
                     << ": X, Y, Z = " << atom.pos.x << ", " << atom.pos.y << ", " << atom.pos.z << 
                     " - VX, VY, VZ = " << atom.vel.x << ", " << atom.vel.y << ", " << atom.vel.z 
                     << " - Mass: " << atom.mass
                     << "\n";
+            }
+
+            if (DEBUG_CONSOLE == 2 || DEBUG_CONSOLE == 3) {
+                cout
+                    << atom.id << ": "
+                    << find(parent, atom.id) << "\n";
             }
 
             if (DEBUG_CSV) {
@@ -109,7 +129,8 @@ int main() {
                     << atom.pos.x << "," << atom.pos.y << "," << atom.pos.z << ","
                     << atom.vel.x << "," << atom.vel.y << "," << atom.vel.z << ","
                     << atom.mass << ","
-                    << atom.element
+                    << atom.element << ","
+                    << find(parent, atom.id)
                     << "\n";
             }
         }
@@ -121,6 +142,7 @@ int main() {
         for (auto& atom : atoms) {
             DrawCircleLinesV(Vector2({atom.pos.x, atom.pos.y}), ELECTRON_FLOAT_RADIUS, Fade(RED, 0.5f));
 
+            // Add labels to each element
             const char* sym = atom.element.c_str();
             int textWidth = MeasureText(sym, FONT_SIZE);
             DrawText(sym, atom.pos.x - (textWidth / 2), atom.pos.y + RELATIVE_TEXT_HEIGHT, FONT_SIZE, Fade(GRAY, 0.8f));

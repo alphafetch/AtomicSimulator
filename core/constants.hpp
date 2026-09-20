@@ -16,6 +16,7 @@
 
 #define FORCE_MIN_DIST 15
 #define FORCE_MAX_DIST 50
+#define BOND_DIST 22
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
@@ -24,6 +25,10 @@
 #define RELATIVE_TEXT_HEIGHT -20
 #define FONT_SIZE 8
 
+// DEBUG_CONSOLE: 0 - None
+//                1 - Log atomic positions
+//                2 - Log bonds
+//                3 - All logs
 #define DEBUG_CONSOLE 0
 #define DEBUG_CSV 0
 
