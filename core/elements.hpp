@@ -7,7 +7,7 @@
 struct Element {
     std::string symbol;
     std::string name;
-    int neutrons; // standard (most common isotope) neutron count
+    int neutrons;      // standard (most common isotope) neutron count
     long abundancePpm; // real cosmic (mass fraction) abundance, in ppm;
                        // elements without precise cited data use a small
                        // floor value (1) rather than 0, so they stay possible

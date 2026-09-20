@@ -5,7 +5,19 @@
 
 #include "../core/constants.hpp"
 
-Atom::Atom(float x, float y, float z, float vx, float vy, float vz, int electrons, int protons, int neutrons, int id) {
+void Atom::refreshDerivedFields(const std::unordered_map<int, Element>& elementTable) { 
+    this->subatomTier = this->getSubatomTier(); 
+    
+    this->electrons = this->protons;
+    this->mass = (this->electrons * ELECTRON_MASS_KG) + 
+                 (this->protons * PROTON_MASS_KG) + 
+                 (this->neutrons * NEUTRON_MASS_KG); 
+
+    auto elem = elementTable.at(this->protons);
+    this->element = elem.symbol;
+}
+
+Atom::Atom(float x, float y, float z, float vx, float vy, float vz, int electrons, int protons, int neutrons, int id, std::unordered_map<int, Element>& eT) {
     this->id = id;
 
     this->pos.x = x;
@@ -19,12 +31,8 @@ Atom::Atom(float x, float y, float z, float vx, float vy, float vz, int electron
     this->electrons = electrons;
     this->protons = protons;
     this->neutrons = neutrons;
-    this->subatomTier = this->getSubatomTier();
-
-    this->mass = 
-        (electrons * ELECTRON_MASS_KG) + 
-        (protons * PROTON_MASS_KG) + 
-        (neutrons * NEUTRON_MASS_KG);
+    
+    this->refreshDerivedFields(eT);
 }
 
 std::array<int, 3> Atom::getSubatomTier() {
@@ -54,4 +62,15 @@ std::array<int, 3> Atom::getSubatomTier() {
     }
 
     return arr;
+}
+
+void applyDecay(std::mt19937_64& rng, Atom& atom, std::unordered_map<int, Element>& elementTable) {
+    std::uniform_real_distribution<float> dist(0, 1);
+
+    float roll = dist(rng);
+    if (roll <= DECAY_CHANCE && atom.protons > DECAY_PROTON_THRESHOLD) {
+        atom.protons -= 2;
+        atom.neutrons -= 2;
+        atom.refreshDerivedFields(elementTable);
+    }
 }

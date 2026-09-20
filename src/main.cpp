@@ -48,8 +48,7 @@ int main() {
 
         vec::Vector2 pos = randomAtomPos(rng);
         vec::Vector2 vel = randomAtomVel(rng);
-        Atom atom(pos.x, pos.y, 0.0f, vel.x, vel.y, 0.0f, pct, pct, nct, i);
-        atom.element = elem.symbol;
+        Atom atom(pos.x, pos.y, 0.0f, vel.x, vel.y, 0.0f, pct, pct, nct, i, elementTable);
         atoms.push_back(atom);
     }
 
@@ -111,13 +110,14 @@ int main() {
                 atoms[j].vel.y += mag.y;
             }
         }
-        
-        auto molecules = buildMolecules(atoms, parent);
 
-        // Apply friction to each atom
+        // Apply friction and decay to each atom
         for (auto& atom : atoms) {
             atom.vel = atom.vel * ATOMIC_FRICTION;
+            applyDecay(rng, atom, elementTable);
         }
+        
+        auto molecules = buildMolecules(atoms, parent);
         
         // Log to a CSV and Console if needed
         for (auto& atom : atoms) {

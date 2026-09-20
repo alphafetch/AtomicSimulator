@@ -3,8 +3,11 @@
 
 #include <string>
 #include <array>
+#include <random>
+#include <unordered_map>
 
 #include "../core/vector.hpp"
+#include "../core/elements.hpp"
 
 struct Atom {
     int id;
@@ -26,8 +29,11 @@ struct Atom {
     std::string element = "?";
     std::array<int, 3> subatomTier;
 
-    Atom(float x, float y, float z, float vx, float vy, float vz, int electrons, int protons, int neutrons, int id);
+    void refreshDerivedFields(const std::unordered_map<int, Element>& elementTable);
+    Atom(float x, float y, float z, float vx, float vy, float vz, int electrons, int protons, int neutrons, int id, std::unordered_map<int, Element>& eT);
     std::array<int, 3> getSubatomTier();
 };
+
+void applyDecay(std::mt19937_64& rng, Atom& atom, std::unordered_map<int, Element>& elementTable);
 
 #endif
