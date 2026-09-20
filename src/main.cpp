@@ -165,9 +165,11 @@ int main() {
                 int textWidth = MeasureText(sym, FONT_SIZE);
                 DrawText(sym, atom.pos.x - (textWidth / 2), atom.pos.y + RELATIVE_TEXT_HEIGHT_SOLO, FONT_SIZE, Fade(GRAY, 0.8f));
             } else if (!molecule.labelDrawn) {
-                const char* form = molecule.formula.c_str();
-                int textWidth = MeasureText(form, FONT_SIZE);
-                DrawText(form, molecule.centeroid.x - (textWidth / 2), molecule.centeroid.y + RELATIVE_TEXT_HEIGHT_MOLECULE, FONT_SIZE, Fade(GRAY, 0.8f));
+                std::string form = molecule.formula;
+                std::string label = "[ " + form + "]";
+                const char* moleculeLabel = label.c_str();
+                int textWidth = MeasureText(moleculeLabel, FONT_SIZE);
+                DrawText(moleculeLabel, molecule.centeroid.x - (textWidth / 2), molecule.centeroid.y + RELATIVE_TEXT_HEIGHT_MOLECULE, FONT_SIZE, Fade(GRAY, 0.8f));
                 molecule.labelDrawn = true;
             }
         

@@ -28,6 +28,7 @@ std::unordered_map<int, Molecule> buildMolecules(std::vector<Atom>& atoms, std::
             if (elem.second != 1) {
                 compStr += std::to_string(count);
             }
+            compStr += " ";
         }
 
         m.formula = compStr;
