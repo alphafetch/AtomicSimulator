@@ -85,6 +85,8 @@ int main() {
         std::chrono::high_resolution_clock::time_point loopStartProfiler;
         if (DEBUG_PROFILER) loopStartProfiler = std::chrono::high_resolution_clock::now();
 
+        std::chrono::high_resolution_clock::time_point startResetLoopProfiler;
+        if (DEBUG_PROFILER) startResetLoopProfiler = std::chrono::high_resolution_clock::now();
         // Reset the parent array
         for (size_t i = 0; i < parent.size(); i++) {
             parent[i] = i;
@@ -93,7 +95,14 @@ int main() {
         for (size_t i = 0; i < fusing.size(); i++) {
             fusing[i] = false;
         }
+        if (DEBUG_PROFILER) {
+            auto endResetLoopProfiler = std::chrono::high_resolution_clock::now();
+            auto microsecondsResetLoopProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endResetLoopProfiler - startResetLoopProfiler).count();
+            if (frame % 60 == 0) cout << "PROFILER: RESET LOOPS: " << microsecondsResetLoopProfiler << "\n";
+        }
 
+        std::chrono::high_resolution_clock::time_point startPosProfiler;
+        if (DEBUG_PROFILER) startPosProfiler = std::chrono::high_resolution_clock::now();
         // Change position based on atomic velocity
         for (size_t i = 0; i < atoms.size(); i++) {
             atoms[i].pos.x += atoms[i].vel.x;
@@ -107,6 +116,11 @@ int main() {
             if (atoms[i].pos.y >= WINDOW_HEIGHT - (ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS) || atoms[i].pos.y <= 0) {
                 atoms[i].vel.y *= -1;
             }
+        }
+        if (DEBUG_PROFILER) {
+            auto endPosProfiler = std::chrono::high_resolution_clock::now();
+            auto microsecondsPosProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endPosProfiler - startPosProfiler).count();
+            if (frame % 60 == 0) cout << "PROFILER: POS: " << microsecondsPosProfiler << "\n";
         }
 
         std::chrono::high_resolution_clock::time_point startN2Profiler;
@@ -140,9 +154,11 @@ int main() {
         if (DEBUG_PROFILER) {
             auto endN2Profiler = std::chrono::high_resolution_clock::now();
             auto microsecondsN2Profiler = std::chrono::duration_cast<std::chrono::microseconds>(endN2Profiler - startN2Profiler).count();
-            if (frame % 60 == 0) cout << "PROFILER: N2: " << microsecondsN2Profiler<< "\n";
+            if (frame % 60 == 0) cout << "PROFILER: N2: " << microsecondsN2Profiler << "\n";
         }
 
+        std::chrono::high_resolution_clock::time_point startFuseAppProfiler;
+        if (DEBUG_PROFILER) startFuseAppProfiler = std::chrono::high_resolution_clock::now();
         for (size_t i = 0; i < toFuse.size(); i++) {
             atoms[toFuse[i].first].protons += atoms[toFuse[i].second].protons;
             atoms[toFuse[i].first].neutrons += atoms[toFuse[i].second].neutrons;
@@ -156,17 +172,45 @@ int main() {
         }
 
         toFuse.clear();
+
+        if (DEBUG_PROFILER) {
+            auto endFuseAppProfiler = std::chrono::high_resolution_clock::now();
+            auto microsecondsFuseAppProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endFuseAppProfiler - startFuseAppProfiler).count();
+            if (frame % 60 == 0) cout << "PROFILER: FUSE APP.: " << microsecondsFuseAppProfiler << "\n";
+        }
+
+        std::chrono::high_resolution_clock::time_point startRDFProfiler;
+        if (DEBUG_PROFILER) startRDFProfiler = std::chrono::high_resolution_clock::now();
         for (size_t i = 0; i < atoms.size(); i++) {
             atoms[i].refreshDerivedFields(elementTable);
         }
+        if (DEBUG_PROFILER) {
+            auto endRDFProfiler = std::chrono::high_resolution_clock::now();
+            auto microsecondsRDFProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endRDFProfiler - startRDFProfiler).count();
+            if (frame % 60 == 0) cout << "PROFILER: RDF: " << microsecondsRDFProfiler << "\n";
+        }
 
+        std::chrono::high_resolution_clock::time_point startFrictionDecayProfiler;
+        if (DEBUG_PROFILER) startFrictionDecayProfiler = std::chrono::high_resolution_clock::now();
         // Apply friction and decay to each atom
         for (size_t i = 0; i < atoms.size(); i++) {
             atoms[i].vel = atoms[i].vel * settings.atomicFriction;
             applyDecay(rng, atoms[i], elementTable, settings);
         }
+        if (DEBUG_PROFILER) {
+            auto endFrictionDecayProfiler = std::chrono::high_resolution_clock::now();
+            auto microsecondsFrictionDecayProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endFrictionDecayProfiler - startFrictionDecayProfiler).count();
+            if (frame % 60 == 0) cout << "PROFILER: FRIC/DECAY: " << microsecondsFrictionDecayProfiler << "\n";
+        }
         
+        std::chrono::high_resolution_clock::time_point startBuildMolecProfiler;
+        if (DEBUG_PROFILER) startBuildMolecProfiler = std::chrono::high_resolution_clock::now();
         auto molecules = buildMolecules(atoms, parent);
+        if (DEBUG_PROFILER) {
+            auto endBuildMolecProfiler = std::chrono::high_resolution_clock::now();
+            auto microsecondsBuildMolecProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endBuildMolecProfiler - startBuildMolecProfiler).count();
+            if (frame % 60 == 0) cout << "PROFILER: BUILD MOLEC.: " << microsecondsBuildMolecProfiler << "\n";
+        }
         
         // Log to a CSV and Console if needed
         for (size_t i = 0; i < atoms.size(); i++) {
@@ -211,6 +255,8 @@ int main() {
             }
         }
 
+        std::chrono::high_resolution_clock::time_point startDrawProfiler;
+        if (DEBUG_PROFILER) startDrawProfiler = std::chrono::high_resolution_clock::now();
         // Draw to the screen (TODO)
         BeginDrawing();
         ClearBackground(BLACK);
@@ -327,6 +373,11 @@ int main() {
         }
 
         EndDrawing();
+        if (DEBUG_PROFILER) {
+            auto endDrawProfiler = std::chrono::high_resolution_clock::now();
+            auto microsecondsDrawProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endDrawProfiler - startDrawProfiler).count();
+            if (frame % 60 == 0) cout << "PROFILER: DRAW: " << microsecondsDrawProfiler << "\n";
+        }
 
         if (DEBUG_PROFILER) {
             auto endLoopProfiler = std::chrono::high_resolution_clock::now();
