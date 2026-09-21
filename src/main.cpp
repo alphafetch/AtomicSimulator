@@ -107,7 +107,7 @@ int main() {
                 float effectiveBondDist = settings.bondDist / safeTemp;
                 if (dist < effectiveBondDist) {
                     bond(parent, i, j);
-                    float effectiveFusionMax = settings.fusionProtonMax * settings.temp;
+                    float effectiveFusionMax = std::min(settings.fusionProtonMax * settings.temp, 118.0f);
                     if (atoms[i].protons + atoms[j].protons < effectiveFusionMax) {
                         toFuse.push_back(std::pair<size_t, size_t>{i, j});
                     }
