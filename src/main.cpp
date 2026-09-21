@@ -7,6 +7,7 @@
 #include <vector>
 #include <array>
 #include <cmath>
+#include <chrono>
 
 #include "raylib.h"
 #define RAYGUI_IMPLEMENTATION
@@ -79,6 +80,9 @@ int main() {
     std::vector<std::pair<size_t, size_t>> toFuse;
 
     while (!WindowShouldClose()) {
+        std::chrono::high_resolution_clock::time_point loopStartProfiler;
+        if (DEBUG_PROFILER) loopStartProfiler = std::chrono::high_resolution_clock::now();
+        
         // Reset the parent array
         for (size_t i = 0; i < parent.size(); i++) {
             parent[i] = i;
@@ -99,6 +103,8 @@ int main() {
             }
         }
 
+        std::chrono::high_resolution_clock::time_point startN2Profiler;
+        if (DEBUG_PROFILER) startN2Profiler = std::chrono::high_resolution_clock::now();
         for (size_t i = 0; i < atoms.size(); i++) {
             for (size_t j = i + 1; j < atoms.size(); j++) {
                 float dist = getAtomicDistance(atoms[i], atoms[j]);
@@ -121,6 +127,11 @@ int main() {
                 atoms[j].vel.x += mag.x;
                 atoms[j].vel.y += mag.y;
             }
+        }
+        if (DEBUG_PROFILER) {
+            auto endN2Profiler = std::chrono::high_resolution_clock::now();
+            auto microsecondsN2Profiler = std::chrono::duration_cast<std::chrono::microseconds>(endN2Profiler - startN2Profiler).count();
+            if (frame % 60 == 0) cout << "PROFILER: N2: " << microsecondsN2Profiler<< "\n";
         }
 
         for (size_t i = 0; i < toFuse.size(); i++) {
@@ -308,7 +319,14 @@ int main() {
 
         EndDrawing();
 
+        if (DEBUG_PROFILER) {
+            auto endLoopProfiler = std::chrono::high_resolution_clock::now();
+            auto microsecondsLoopProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endLoopProfiler - loopStartProfiler).count();
+            if (frame % 60 == 0) cout << "PROFILER: LOOP: " << microsecondsLoopProfiler << "\n";
+        }
+
         frame++;
     }
+    
     CloseWindow();
 }
