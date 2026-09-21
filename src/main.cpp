@@ -99,14 +99,16 @@ int main() {
             }
         }
 
-        // Apply bounces
         for (size_t i = 0; i < atoms.size(); i++) {
             for (size_t j = i + 1; j < atoms.size(); j++) {
                 float dist = getAtomicDistance(atoms[i], atoms[j]);
 
-                if (dist < settings.bondDist) {
+                float safeTemp = std::max(settings.temp, 0.1f);
+                float effectiveBondDist = settings.bondDist / safeTemp;
+                if (dist < effectiveBondDist) {
                     bond(parent, i, j);
-                    if (atoms[i].protons + atoms[j].protons < settings.fusionProtonMax) {
+                    float effectiveFusionMax = settings.fusionProtonMax * settings.temp;
+                    if (atoms[i].protons + atoms[j].protons < effectiveFusionMax) {
                         toFuse.push_back(std::pair<size_t, size_t>{i, j});
                     }
                 }

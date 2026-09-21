@@ -68,7 +68,8 @@ void applyDecay(std::mt19937_64& rng, Atom& atom, std::unordered_map<int, Elemen
     std::uniform_real_distribution<float> dist(0, 1);
 
     float roll = dist(rng);
-    if (roll <= settings.decayChance && atom.protons > settings.decayProtonThreshold) {
+    float effectiveDecayChance = settings.decayChance * settings.temp;
+    if (roll <= effectiveDecayChance && atom.protons > settings.decayProtonThreshold) {
         atom.protons -= 2;
         atom.neutrons -= 2;
         atom.refreshDerivedFields(elementTable);
