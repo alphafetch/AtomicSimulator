@@ -29,7 +29,8 @@ using std::cout;
 
 int main() {
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
-    SetTargetFPS(60);
+    if (!DEBUG_PROFILER) { SetTargetFPS(60); }
+    else { SetTargetFPS(12000); }
     auto elementTable = loadElementTable("data/elements.csv");
     Settings settings;
 
