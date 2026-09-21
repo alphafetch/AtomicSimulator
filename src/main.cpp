@@ -78,14 +78,19 @@ int main() {
     bool showSettings = false;
     std::vector<int> parent(atoms.size());
     std::vector<std::pair<size_t, size_t>> toFuse;
+    std::vector<bool> fusing(atoms.size(), false);
 
     while (!WindowShouldClose()) {
         std::chrono::high_resolution_clock::time_point loopStartProfiler;
         if (DEBUG_PROFILER) loopStartProfiler = std::chrono::high_resolution_clock::now();
-        
+
         // Reset the parent array
         for (size_t i = 0; i < parent.size(); i++) {
             parent[i] = i;
+        }
+        
+        for (size_t i = 0; i < fusing.size(); i++) {
+            fusing[i] = false;
         }
 
         // Change position based on atomic velocity
@@ -114,8 +119,11 @@ int main() {
                 if (dist < effectiveBondDist) {
                     bond(parent, i, j);
                     float effectiveFusionMax = std::min(settings.fusionProtonMax * settings.temp, 118.0f);
-                    if (atoms[i].protons + atoms[j].protons < effectiveFusionMax) {
+                    if (atoms[i].protons + atoms[j].protons < effectiveFusionMax
+                        && (fusing[i] == false && fusing[j] == false)) {
                         toFuse.push_back(std::pair<size_t, size_t>{i, j});
+                        fusing[i] = true;
+                        fusing[j] = true;
                     }
                 }
 
