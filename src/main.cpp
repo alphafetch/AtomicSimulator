@@ -74,6 +74,7 @@ int main() {
 
     // Other miscellaneous initializations
     int frame = 0;
+    bool showSettings = false;
     std::vector<int> parent(atoms.size());
     std::vector<std::pair<size_t, size_t>> toFuse;
 
@@ -199,13 +200,13 @@ int main() {
             Molecule& molecule = molecules[find(parent, i)];
             if (molecule.atomCount == 1) {
                 const char* sym = atoms[i].element.c_str();
-                int textWidth = MeasureText(sym, settings.fontSize);
+                int textWidth = MeasureText(sym, (int)settings.fontSize);
                 DrawText(sym, atoms[i].pos.x - (textWidth / 2), atoms[i].pos.y + RELATIVE_TEXT_HEIGHT_SOLO, settings.fontSize, Fade(GRAY, 0.8f));
             } else if (!molecule.labelDrawn) {
                 std::string form = molecule.formula;
                 std::string label = "[ " + form + "]";
                 const char* moleculeLabel = label.c_str();
-                int textWidth = MeasureText(moleculeLabel, settings.fontSize);
+                int textWidth = MeasureText(moleculeLabel, (int)settings.fontSize);
                 DrawText(moleculeLabel, molecule.centeroid.x - (textWidth / 2), molecule.centeroid.y + RELATIVE_TEXT_HEIGHT_MOLECULE, settings.fontSize, Fade(GRAY, 0.8f));
                 molecule.labelDrawn = true;
             }
@@ -226,6 +227,81 @@ int main() {
                 if (j < atoms[i].subatomTier[1]) { DrawCircleV(Vector2({pt.x, pt.y}), SUBATOMIC_RENDER_RADIUS, GRAY); }
                 else { DrawCircleV(Vector2({pt.x, pt.y}), SUBATOMIC_RENDER_RADIUS, GREEN); }
             }
+        }
+
+        if (showSettings) {
+            int x = GuiWindowBox({0, 0, 600, 600}, "Settings");
+            if (x) showSettings = !showSettings;
+            GuiSlider(
+                {150, 40, 300, 20}, 
+                "Atomic Friction", 
+                TextFormat("%.3f", settings.atomicFriction), 
+                &settings.atomicFriction, 0.90f, 0.9999f
+            );
+            GuiSlider(
+                {150, 70, 300, 20}, 
+                "Force Strength", 
+                TextFormat("%.3f", settings.forceStrength), 
+                &settings.forceStrength, 0.0f, 1.0f
+            );
+            GuiSlider(
+                {150, 100, 300, 20}, 
+                "Force Minimum Distance", 
+                TextFormat("%.f", settings.forceMinDist), 
+                &settings.forceMinDist, 1.0f, 40.0f
+            );
+            GuiSlider(
+                {150, 130, 300, 20}, 
+                "Force Maximum Distance", 
+                TextFormat("%.f", settings.forceMaxDist), 
+                &settings.forceMaxDist, 10.0f, 200.0f
+            );
+            GuiSlider(
+                {150, 160, 300, 20}, 
+                "Bond Distance", 
+                TextFormat("%.f", settings.bondDist), 
+                &settings.bondDist, 5.0f, 40.0f
+            );
+            GuiSlider(
+                {150, 190, 300, 20}, 
+                "Decay Chance", 
+                TextFormat("%.3f", settings.decayChance), 
+                &settings.decayChance, 0.0f, 0.5f
+            );
+            GuiSlider(
+                {150, 220, 300, 20}, 
+                "Decay Proton Threshold", 
+                TextFormat("%.f", settings.decayProtonThreshold), 
+                &settings.decayProtonThreshold, 1.0f, 118.0f
+            );
+            GuiSlider(
+                {150, 250, 300, 20}, 
+                "Fusion Proton Max", 
+                TextFormat("%.f", settings.fusionProtonMax), 
+                &settings.fusionProtonMax, 2.0f, 118.0f
+            );
+            GuiSlider(
+                {150, 280, 300, 20}, 
+                "Electron Orbit Speed", 
+                TextFormat("%.3f", settings.electronOrbitSpeed), 
+                &settings.electronOrbitSpeed, 0.0f, 0.1f
+            );
+            GuiSlider(
+                {150, 310, 300, 20}, 
+                "Font Size", 
+                TextFormat("%.f", settings.fontSize), 
+                &settings.fontSize, 4.0f, 14.0f
+            );
+            GuiSlider(
+                {150, 340, 300, 20}, 
+                "Temperature", 
+                TextFormat("%.3f", settings.temp), 
+                &settings.temp, 0.0f, 3.0f
+            );
+        }
+
+        if (GuiButton({710, 560, 70, 20}, "Settings")) {
+            showSettings = !showSettings;
         }
 
         EndDrawing();
