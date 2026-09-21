@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++20 -Wall
+CXXFLAGS = -std=c++20 -Wall -O2
 INCLUDES = -I/ucrt64/include
 LIBS = -L/ucrt64/lib -lraylib -lopengl32 -lgdi32 -lwinmm
 
