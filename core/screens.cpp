@@ -1,5 +1,7 @@
 #include "screens.hpp"
 
+#include <cstdlib>
+
 #include "raylib.h"
 #include "../external/raygui.h"
 
@@ -21,4 +23,5 @@ SimScreen MAINMenu() {
     }
 
     CloseWindow();
+    exit(EXIT_SUCCESS);
 }
