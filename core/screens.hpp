@@ -5,4 +5,6 @@ typedef enum SimScreen {
     MAIN, ATOM_SIMULATION, PROTEIN_BUILDER 
 } SimScreen;
 
+SimScreen MAINMenu();
+
 #endif
