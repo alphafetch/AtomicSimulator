@@ -260,24 +260,9 @@ int main() {
         // Draw to the screen (TODO)
         BeginDrawing();
         ClearBackground(BLACK);
-
+        
         for (size_t i = 0; i < atoms.size(); i++) {
-            DrawCircleLinesV(Vector2({atoms[i].pos.x, atoms[i].pos.y}), ELECTRON_FLOAT_RADIUS, Fade(RED, 0.5f));
-
-            // Add labels to each element
-            Molecule& molecule = molecules[find(parent, i)];
-            if (molecule.atomCount == 1) {
-                const char* sym = atoms[i].element.c_str();
-                int textWidth = MeasureText(sym, (int)settings.fontSize);
-                DrawText(sym, atoms[i].pos.x - (textWidth / 2), atoms[i].pos.y + RELATIVE_TEXT_HEIGHT_SOLO, settings.fontSize, Fade(GRAY, 0.8f));
-            } else if (!molecule.labelDrawn) {
-                std::string form = molecule.formula;
-                std::string label = "[ " + form + "]";
-                const char* moleculeLabel = label.c_str();
-                int textWidth = MeasureText(moleculeLabel, (int)settings.fontSize);
-                DrawText(moleculeLabel, molecule.centeroid.x - (textWidth / 2), molecule.centeroid.y + RELATIVE_TEXT_HEIGHT_MOLECULE, settings.fontSize, Fade(GRAY, 0.8f));
-                molecule.labelDrawn = true;
-            }
+            DrawCircleLinesV(Vector2({atoms[i].pos.x, atoms[i].pos.y}), ELECTRON_FLOAT_RADIUS, Fade(RED, 0.5f));            
         
             for (int j = 0; j < atoms[i].subatomTier[2]; j++) {
                 float theta = j * ((2 * std::numbers::pi) / atoms[i].subatomTier[2]) + frame * settings.electronOrbitSpeed;
@@ -294,6 +279,23 @@ int main() {
 
                 if (j < atoms[i].subatomTier[1]) { DrawCircleV(Vector2({pt.x, pt.y}), SUBATOMIC_RENDER_RADIUS, GRAY); }
                 else { DrawCircleV(Vector2({pt.x, pt.y}), SUBATOMIC_RENDER_RADIUS, GREEN); }
+            }
+        }
+
+        for (size_t i = 0; i < atoms.size(); i++) {
+            // Add labels to each element
+            Molecule& molecule = molecules[find(parent, i)];
+            if (molecule.atomCount == 1) {
+                const char* sym = atoms[i].element.c_str();
+                int textWidth = MeasureText(sym, (int)settings.fontSize);
+                DrawText(sym, atoms[i].pos.x - (textWidth / 2), atoms[i].pos.y + RELATIVE_TEXT_HEIGHT_SOLO, settings.fontSize, Fade(GRAY, 0.8f));
+            } else if (!molecule.labelDrawn) {
+                std::string form = molecule.formula;
+                std::string label = "[ " + form + "]";
+                const char* moleculeLabel = label.c_str();
+                int textWidth = MeasureText(moleculeLabel, (int)settings.fontSize);
+                DrawText(moleculeLabel, molecule.centeroid.x - (textWidth / 2), molecule.centeroid.y + RELATIVE_TEXT_HEIGHT_MOLECULE, settings.fontSize, Fade(GRAY, 0.8f));
+                molecule.labelDrawn = true;
             }
         }
 
