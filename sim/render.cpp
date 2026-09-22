@@ -21,7 +21,7 @@ void renderAtom(const Atom& atom, const Settings& settings, int frame) {
         for (int j = 0; j < atom.subatomTier[2]; j++) {
             float theta = j * ((2 * std::numbers::pi) / atom.subatomTier[2]) + frame * settings.electronOrbitSpeed;
             
-            vec::Vector2 pt = getPointOfCenter(vec::Vector2(atom.pos.x, atom.pos.y), NUCLEAR_FLOAT_RADIUS, theta);
+            vec::Vector2 pt = getPointOfCenter(vec::Vector2(atom.pos.x, atom.pos.y), ELECTRON_FLOAT_RADIUS, theta);
 
             DrawCircleV(Vector2({pt.x, pt.y}), ELECTRON_RENDER_RADIUS, RED);
         }
