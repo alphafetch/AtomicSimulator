@@ -28,7 +28,7 @@
 using std::cout;
 
 int main() {
-    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
+    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, MAIN_WINDOW_TITLE);
     if (!DEBUG_PROFILER) { SetTargetFPS(60); }
     else { SetTargetFPS(12000); }
 
@@ -92,10 +92,12 @@ int main() {
 
                 if (GuiButton({340, 265, 120, 40}, "Atom Simulation")) {
                     currentScreen = ATOM_SIMULATION;
+                    SetWindowTitle(ATOM_SIMULATOR_WINDOW_TITLE);
                 }
 
                 if (GuiButton({340, 315, 120, 40}, "Protein Builder")) {
                     currentScreen = PROTEIN_BUILDER;
+                    SetWindowTitle(PROTEIN_BUILDER_WINDOW_TITLE);
                 }
 
                 EndDrawing();
