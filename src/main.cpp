@@ -17,13 +17,13 @@
 #include "../core/utils.hpp"
 #include "../core/vector.hpp"
 #include "../core/elements.hpp"
+#include "../core/settings.hpp"
+#include "../core/screens.hpp"
 
 #include "../sim/atom.hpp"
 #include "../sim/utils.hpp"
 #include "../sim/bondFind.hpp"
 #include "../sim/molecule.hpp"
-
-#include "../core/settings.hpp"
 
 using std::cout;
 
@@ -31,6 +31,7 @@ int main() {
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE);
     if (!DEBUG_PROFILER) { SetTargetFPS(60); }
     else { SetTargetFPS(12000); }
+
     auto elementTable = loadElementTable("data/elements.csv");
     Settings settings;
 
@@ -77,332 +78,366 @@ int main() {
     // Other miscellaneous initializations
     int frame = 0;
     bool showSettings = false;
+    SimScreen currentScreen = MAIN;
     std::vector<int> parent(atoms.size());
     std::vector<std::pair<size_t, size_t>> toFuse;
     std::vector<bool> fusing(atoms.size(), false);
 
     while (!WindowShouldClose()) {
-        std::chrono::high_resolution_clock::time_point loopStartProfiler;
-        if (DEBUG_PROFILER) loopStartProfiler = std::chrono::high_resolution_clock::now();
+        switch (currentScreen) {
+            case MAIN: {
+                BeginDrawing();
 
-        std::chrono::high_resolution_clock::time_point startResetLoopProfiler;
-        if (DEBUG_PROFILER) startResetLoopProfiler = std::chrono::high_resolution_clock::now();
-        // Reset the parent array
-        for (size_t i = 0; i < parent.size(); i++) {
-            parent[i] = i;
-        }
-        
-        for (size_t i = 0; i < fusing.size(); i++) {
-            fusing[i] = false;
-        }
-        if (DEBUG_PROFILER) {
-            auto endResetLoopProfiler = std::chrono::high_resolution_clock::now();
-            auto microsecondsResetLoopProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endResetLoopProfiler - startResetLoopProfiler).count();
-            if (frame % 60 == 0) cout << "PROFILER: RESET LOOPS: " << microsecondsResetLoopProfiler << "\n";
-        }
+                ClearBackground(DARKGRAY);
 
-        std::chrono::high_resolution_clock::time_point startPosProfiler;
-        if (DEBUG_PROFILER) startPosProfiler = std::chrono::high_resolution_clock::now();
-        // Change position based on atomic velocity
-        for (size_t i = 0; i < atoms.size(); i++) {
-            atoms[i].pos.x += atoms[i].vel.x;
-            atoms[i].pos.y += atoms[i].vel.y;
-            atoms[i].pos.z += atoms[i].vel.z;
+                if (GuiButton({340, 265, 120, 40}, "Atom Simulation")) {
+                    currentScreen = ATOM_SIMULATION;
+                }
 
-            if (atoms[i].pos.x >= WINDOW_WIDTH - (ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS) || atoms[i].pos.x <= 0) {
-                atoms[i].vel.x *= -1;
+                if (GuiButton({340, 315, 120, 40}, "Protein Builder")) {
+                    currentScreen = PROTEIN_BUILDER;
+                }
+
+                EndDrawing();
+
+                break;
             }
+            case ATOM_SIMULATION: {
+                std::chrono::high_resolution_clock::time_point loopStartProfiler;
+                if (DEBUG_PROFILER) loopStartProfiler = std::chrono::high_resolution_clock::now();
 
-            if (atoms[i].pos.y >= WINDOW_HEIGHT - (ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS) || atoms[i].pos.y <= 0) {
-                atoms[i].vel.y *= -1;
-            }
-        }
-        if (DEBUG_PROFILER) {
-            auto endPosProfiler = std::chrono::high_resolution_clock::now();
-            auto microsecondsPosProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endPosProfiler - startPosProfiler).count();
-            if (frame % 60 == 0) cout << "PROFILER: POS: " << microsecondsPosProfiler << "\n";
-        }
+                std::chrono::high_resolution_clock::time_point startResetLoopProfiler;
+                if (DEBUG_PROFILER) startResetLoopProfiler = std::chrono::high_resolution_clock::now();
+                // Reset the parent array
+                for (size_t i = 0; i < parent.size(); i++) {
+                    parent[i] = i;
+                }
+                
+                for (size_t i = 0; i < fusing.size(); i++) {
+                    fusing[i] = false;
+                }
+                if (DEBUG_PROFILER) {
+                    auto endResetLoopProfiler = std::chrono::high_resolution_clock::now();
+                    auto microsecondsResetLoopProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endResetLoopProfiler - startResetLoopProfiler).count();
+                    if (frame % 60 == 0) cout << "PROFILER: RESET LOOPS: " << microsecondsResetLoopProfiler << "\n";
+                }
 
-        std::chrono::high_resolution_clock::time_point startN2Profiler;
-        if (DEBUG_PROFILER) startN2Profiler = std::chrono::high_resolution_clock::now();
-        for (size_t i = 0; i < atoms.size(); i++) {
-            for (size_t j = i + 1; j < atoms.size(); j++) {
-                float dist = getAtomicDistance(atoms[i], atoms[j]);
+                std::chrono::high_resolution_clock::time_point startPosProfiler;
+                if (DEBUG_PROFILER) startPosProfiler = std::chrono::high_resolution_clock::now();
+                // Change position based on atomic velocity
+                for (size_t i = 0; i < atoms.size(); i++) {
+                    atoms[i].pos.x += atoms[i].vel.x;
+                    atoms[i].pos.y += atoms[i].vel.y;
+                    atoms[i].pos.z += atoms[i].vel.z;
 
-                float safeTemp = std::max(settings.temp, 0.1f);
-                float effectiveBondDist = settings.bondDist / safeTemp;
-                if (dist < effectiveBondDist) {
-                    bond(parent, i, j);
-                    float effectiveFusionMax = std::min(settings.fusionProtonMax * settings.temp, 118.0f);
-                    if (atoms[i].protons + atoms[j].protons < effectiveFusionMax
-                        && (fusing[i] == false && fusing[j] == false)) {
-                        toFuse.push_back(std::pair<size_t, size_t>{i, j});
-                        fusing[i] = true;
-                        fusing[j] = true;
+                    if (atoms[i].pos.x >= WINDOW_WIDTH - (ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS) || atoms[i].pos.x <= 0) {
+                        atoms[i].vel.x *= -1;
+                    }
+
+                    if (atoms[i].pos.y >= WINDOW_HEIGHT - (ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS) || atoms[i].pos.y <= 0) {
+                        atoms[i].vel.y *= -1;
+                    }
+                }
+                if (DEBUG_PROFILER) {
+                    auto endPosProfiler = std::chrono::high_resolution_clock::now();
+                    auto microsecondsPosProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endPosProfiler - startPosProfiler).count();
+                    if (frame % 60 == 0) cout << "PROFILER: POS: " << microsecondsPosProfiler << "\n";
+                }
+
+                std::chrono::high_resolution_clock::time_point startN2Profiler;
+                if (DEBUG_PROFILER) startN2Profiler = std::chrono::high_resolution_clock::now();
+                for (size_t i = 0; i < atoms.size(); i++) {
+                    for (size_t j = i + 1; j < atoms.size(); j++) {
+                        float dist = getAtomicDistance(atoms[i], atoms[j]);
+
+                        float safeTemp = std::max(settings.temp, 0.1f);
+                        float effectiveBondDist = settings.bondDist / safeTemp;
+                        if (dist < effectiveBondDist) {
+                            bond(parent, i, j);
+                            float effectiveFusionMax = std::min(settings.fusionProtonMax * settings.temp, 118.0f);
+                            if (atoms[i].protons + atoms[j].protons < effectiveFusionMax
+                                && (fusing[i] == false && fusing[j] == false)) {
+                                toFuse.push_back(std::pair<size_t, size_t>{i, j});
+                                fusing[i] = true;
+                                fusing[j] = true;
+                            }
+                        }
+
+                        vec::Vector2 mag = getForceMagnitude(dist, atoms[i], atoms[j], settings);
+
+                        atoms[i].vel.x -= mag.x;
+                        atoms[i].vel.y -= mag.y;
+
+                        atoms[j].vel.x += mag.x;
+                        atoms[j].vel.y += mag.y;
+                    }
+                }
+                if (DEBUG_PROFILER) {
+                    auto endN2Profiler = std::chrono::high_resolution_clock::now();
+                    auto microsecondsN2Profiler = std::chrono::duration_cast<std::chrono::microseconds>(endN2Profiler - startN2Profiler).count();
+                    if (frame % 60 == 0) cout << "PROFILER: N2: " << microsecondsN2Profiler << "\n";
+                }
+
+                std::chrono::high_resolution_clock::time_point startFuseAppProfiler;
+                if (DEBUG_PROFILER) startFuseAppProfiler = std::chrono::high_resolution_clock::now();
+                for (size_t i = 0; i < toFuse.size(); i++) {
+                    atoms[toFuse[i].first].protons += atoms[toFuse[i].second].protons;
+                    atoms[toFuse[i].first].neutrons += atoms[toFuse[i].second].neutrons;
+                    atoms[toFuse[i].second].markedForRemoval = true;
+                }
+
+                for (int i = static_cast<int>(atoms.size() - 1); i >= 0; i--) {
+                    if (atoms[i].markedForRemoval) {
+                        atoms.erase(atoms.begin() + i);
                     }
                 }
 
-                vec::Vector2 mag = getForceMagnitude(dist, atoms[i], atoms[j], settings);
+                toFuse.clear();
 
-                atoms[i].vel.x -= mag.x;
-                atoms[i].vel.y -= mag.y;
-
-                atoms[j].vel.x += mag.x;
-                atoms[j].vel.y += mag.y;
-            }
-        }
-        if (DEBUG_PROFILER) {
-            auto endN2Profiler = std::chrono::high_resolution_clock::now();
-            auto microsecondsN2Profiler = std::chrono::duration_cast<std::chrono::microseconds>(endN2Profiler - startN2Profiler).count();
-            if (frame % 60 == 0) cout << "PROFILER: N2: " << microsecondsN2Profiler << "\n";
-        }
-
-        std::chrono::high_resolution_clock::time_point startFuseAppProfiler;
-        if (DEBUG_PROFILER) startFuseAppProfiler = std::chrono::high_resolution_clock::now();
-        for (size_t i = 0; i < toFuse.size(); i++) {
-            atoms[toFuse[i].first].protons += atoms[toFuse[i].second].protons;
-            atoms[toFuse[i].first].neutrons += atoms[toFuse[i].second].neutrons;
-            atoms[toFuse[i].second].markedForRemoval = true;
-        }
-
-        for (int i = static_cast<int>(atoms.size() - 1); i >= 0; i--) {
-            if (atoms[i].markedForRemoval) {
-                atoms.erase(atoms.begin() + i);
-            }
-        }
-
-        toFuse.clear();
-
-        if (DEBUG_PROFILER) {
-            auto endFuseAppProfiler = std::chrono::high_resolution_clock::now();
-            auto microsecondsFuseAppProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endFuseAppProfiler - startFuseAppProfiler).count();
-            if (frame % 60 == 0) cout << "PROFILER: FUSE APP.: " << microsecondsFuseAppProfiler << "\n";
-        }
-
-        std::chrono::high_resolution_clock::time_point startRDFProfiler;
-        if (DEBUG_PROFILER) startRDFProfiler = std::chrono::high_resolution_clock::now();
-        for (size_t i = 0; i < atoms.size(); i++) {
-            atoms[i].refreshDerivedFields(elementTable);
-        }
-        if (DEBUG_PROFILER) {
-            auto endRDFProfiler = std::chrono::high_resolution_clock::now();
-            auto microsecondsRDFProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endRDFProfiler - startRDFProfiler).count();
-            if (frame % 60 == 0) cout << "PROFILER: RDF: " << microsecondsRDFProfiler << "\n";
-        }
-
-        std::chrono::high_resolution_clock::time_point startFrictionDecayProfiler;
-        if (DEBUG_PROFILER) startFrictionDecayProfiler = std::chrono::high_resolution_clock::now();
-        // Apply friction and decay to each atom
-        for (size_t i = 0; i < atoms.size(); i++) {
-            atoms[i].vel = atoms[i].vel * settings.atomicFriction;
-            applyDecay(rng, atoms[i], elementTable, settings);
-        }
-        if (DEBUG_PROFILER) {
-            auto endFrictionDecayProfiler = std::chrono::high_resolution_clock::now();
-            auto microsecondsFrictionDecayProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endFrictionDecayProfiler - startFrictionDecayProfiler).count();
-            if (frame % 60 == 0) cout << "PROFILER: FRIC/DECAY: " << microsecondsFrictionDecayProfiler << "\n";
-        }
-        
-        std::chrono::high_resolution_clock::time_point startBuildMolecProfiler;
-        if (DEBUG_PROFILER) startBuildMolecProfiler = std::chrono::high_resolution_clock::now();
-        auto molecules = buildMolecules(atoms, parent);
-        if (DEBUG_PROFILER) {
-            auto endBuildMolecProfiler = std::chrono::high_resolution_clock::now();
-            auto microsecondsBuildMolecProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endBuildMolecProfiler - startBuildMolecProfiler).count();
-            if (frame % 60 == 0) cout << "PROFILER: BUILD MOLEC.: " << microsecondsBuildMolecProfiler << "\n";
-        }
-        
-        // Log to a CSV and Console if needed
-        for (size_t i = 0; i < atoms.size(); i++) {
-            if (DEBUG_CONSOLE == 1 || DEBUG_CONSOLE == 3) { 
-                cout 
-                    << "Atom " << atoms[i].id << " - " << atoms[i].element
-                    << ": X, Y, Z = " << atoms[i].pos.x << ", " << atoms[i].pos.y << ", " << atoms[i].pos.z << 
-                    " - VX, VY, VZ = " << atoms[i].vel.x << ", " << atoms[i].vel.y << ", " << atoms[i].vel.z 
-                    << " - Mass: " << atoms[i].mass
-                    << "\n";
-            }
-
-            if (DEBUG_CONSOLE == 2 || DEBUG_CONSOLE == 3) {
-                cout
-                    << atoms[i].id << ": "
-                    << find(parent, i) << "\n";
-            }
-
-            if (DEBUG_CSV) {
-                Molecule& molecule = molecules[find(parent, i)];
-                csvstream
-                    << frame << ","
-                    << atoms[i].id << ","
-                    << atoms[i].pos.x << "," << atoms[i].pos.y << "," << atoms[i].pos.z << ","
-                    << atoms[i].vel.x << "," << atoms[i].vel.y << "," << atoms[i].vel.z << ","
-                    << atoms[i].mass << ","
-                    << atoms[i].element << ","
-                    << find(parent, i) << ","
-                    << molecule.formula << ","
-                    << molecule.mass
-                    << "\n";
-            }
-        }
-
-        if (DEBUG_CONSOLE == 4 || DEBUG_CONSOLE == 3) {
-            for (auto& entry : molecules) {
-                Molecule& molecule = entry.second;
-                cout
-                    << "Molecule (root " << entry.first << "): " << molecule.formula
-                    << " - Mass: " << molecule.mass
-                    << "\n";
-            }
-        }
-
-        std::chrono::high_resolution_clock::time_point startDrawProfiler;
-        if (DEBUG_PROFILER) startDrawProfiler = std::chrono::high_resolution_clock::now();
-        // Draw to the screen (TODO)
-        BeginDrawing();
-        ClearBackground(BLACK);
-        
-        for (size_t i = 0; i < atoms.size(); i++) {
-            if (!settings.simpleAtoms) {
-                DrawCircleLinesV(Vector2({atoms[i].pos.x, atoms[i].pos.y}), ELECTRON_FLOAT_RADIUS, Fade(RED, 0.5f));            
-            
-                for (int j = 0; j < atoms[i].subatomTier[2]; j++) {
-                    float theta = j * ((2 * std::numbers::pi) / atoms[i].subatomTier[2]) + frame * settings.electronOrbitSpeed;
-
-                    vec::Vector2 pt = getPointOfCenter(vec::Vector2(atoms[i].pos.x, atoms[i].pos.y), ELECTRON_FLOAT_RADIUS, theta);
-
-                    DrawCircleV(Vector2({pt.x, pt.y}), ELECTRON_RENDER_RADIUS, RED);
+                if (DEBUG_PROFILER) {
+                    auto endFuseAppProfiler = std::chrono::high_resolution_clock::now();
+                    auto microsecondsFuseAppProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endFuseAppProfiler - startFuseAppProfiler).count();
+                    if (frame % 60 == 0) cout << "PROFILER: FUSE APP.: " << microsecondsFuseAppProfiler << "\n";
                 }
 
-                for (int j = 0; j < atoms[i].subatomTier[1] + atoms[i].subatomTier[0]; j++) {
-                    float theta = j * ((2 * std::numbers::pi) / (atoms[i].subatomTier[1] + atoms[i].subatomTier[0]));
-
-                    vec::Vector2 pt = getPointOfCenter(vec::Vector2(atoms[i].pos.x, atoms[i].pos.y), NUCLEAR_FLOAT_RADIUS, theta);
-
-                    if (j < atoms[i].subatomTier[1]) { DrawCircleV(Vector2({pt.x, pt.y}), SUBATOMIC_RENDER_RADIUS, GRAY); }
-                    else { DrawCircleV(Vector2({pt.x, pt.y}), SUBATOMIC_RENDER_RADIUS, GREEN); }
+                std::chrono::high_resolution_clock::time_point startRDFProfiler;
+                if (DEBUG_PROFILER) startRDFProfiler = std::chrono::high_resolution_clock::now();
+                for (size_t i = 0; i < atoms.size(); i++) {
+                    atoms[i].refreshDerivedFields(elementTable);
                 }
-            } else {
-                DrawCircleV(
-                    {atoms[i].pos.x, atoms[i].pos.y},
-                    ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS,
-                    GREEN
-                );
+                if (DEBUG_PROFILER) {
+                    auto endRDFProfiler = std::chrono::high_resolution_clock::now();
+                    auto microsecondsRDFProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endRDFProfiler - startRDFProfiler).count();
+                    if (frame % 60 == 0) cout << "PROFILER: RDF: " << microsecondsRDFProfiler << "\n";
+                }
+
+                std::chrono::high_resolution_clock::time_point startFrictionDecayProfiler;
+                if (DEBUG_PROFILER) startFrictionDecayProfiler = std::chrono::high_resolution_clock::now();
+                // Apply friction and decay to each atom
+                for (size_t i = 0; i < atoms.size(); i++) {
+                    atoms[i].vel = atoms[i].vel * settings.atomicFriction;
+                    applyDecay(rng, atoms[i], elementTable, settings);
+                }
+                if (DEBUG_PROFILER) {
+                    auto endFrictionDecayProfiler = std::chrono::high_resolution_clock::now();
+                    auto microsecondsFrictionDecayProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endFrictionDecayProfiler - startFrictionDecayProfiler).count();
+                    if (frame % 60 == 0) cout << "PROFILER: FRIC/DECAY: " << microsecondsFrictionDecayProfiler << "\n";
+                }
+                
+                std::chrono::high_resolution_clock::time_point startBuildMolecProfiler;
+                if (DEBUG_PROFILER) startBuildMolecProfiler = std::chrono::high_resolution_clock::now();
+                auto molecules = buildMolecules(atoms, parent);
+                if (DEBUG_PROFILER) {
+                    auto endBuildMolecProfiler = std::chrono::high_resolution_clock::now();
+                    auto microsecondsBuildMolecProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endBuildMolecProfiler - startBuildMolecProfiler).count();
+                    if (frame % 60 == 0) cout << "PROFILER: BUILD MOLEC.: " << microsecondsBuildMolecProfiler << "\n";
+                }
+                
+                // Log to a CSV and Console if needed
+                for (size_t i = 0; i < atoms.size(); i++) {
+                    if (DEBUG_CONSOLE == 1 || DEBUG_CONSOLE == 3) { 
+                        cout 
+                            << "Atom " << atoms[i].id << " - " << atoms[i].element
+                            << ": X, Y, Z = " << atoms[i].pos.x << ", " << atoms[i].pos.y << ", " << atoms[i].pos.z << 
+                            " - VX, VY, VZ = " << atoms[i].vel.x << ", " << atoms[i].vel.y << ", " << atoms[i].vel.z 
+                            << " - Mass: " << atoms[i].mass
+                            << "\n";
+                    }
+
+                    if (DEBUG_CONSOLE == 2 || DEBUG_CONSOLE == 3) {
+                        cout
+                            << atoms[i].id << ": "
+                            << find(parent, i) << "\n";
+                    }
+
+                    if (DEBUG_CSV) {
+                        Molecule& molecule = molecules[find(parent, i)];
+                        csvstream
+                            << frame << ","
+                            << atoms[i].id << ","
+                            << atoms[i].pos.x << "," << atoms[i].pos.y << "," << atoms[i].pos.z << ","
+                            << atoms[i].vel.x << "," << atoms[i].vel.y << "," << atoms[i].vel.z << ","
+                            << atoms[i].mass << ","
+                            << atoms[i].element << ","
+                            << find(parent, i) << ","
+                            << molecule.formula << ","
+                            << molecule.mass
+                            << "\n";
+                    }
+                }
+
+                if (DEBUG_CONSOLE == 4 || DEBUG_CONSOLE == 3) {
+                    for (auto& entry : molecules) {
+                        Molecule& molecule = entry.second;
+                        cout
+                            << "Molecule (root " << entry.first << "): " << molecule.formula
+                            << " - Mass: " << molecule.mass
+                            << "\n";
+                    }
+                }
+
+                std::chrono::high_resolution_clock::time_point startDrawProfiler;
+                if (DEBUG_PROFILER) startDrawProfiler = std::chrono::high_resolution_clock::now();
+                // Draw to the screen (TODO)
+                BeginDrawing();
+                ClearBackground(BLACK);
+                
+                for (size_t i = 0; i < atoms.size(); i++) {
+                    if (!settings.simpleAtoms) {
+                        DrawCircleLinesV(Vector2({atoms[i].pos.x, atoms[i].pos.y}), ELECTRON_FLOAT_RADIUS, Fade(RED, 0.5f));            
+                    
+                        for (int j = 0; j < atoms[i].subatomTier[2]; j++) {
+                            float theta = j * ((2 * std::numbers::pi) / atoms[i].subatomTier[2]) + frame * settings.electronOrbitSpeed;
+
+                            vec::Vector2 pt = getPointOfCenter(vec::Vector2(atoms[i].pos.x, atoms[i].pos.y), ELECTRON_FLOAT_RADIUS, theta);
+
+                            DrawCircleV(Vector2({pt.x, pt.y}), ELECTRON_RENDER_RADIUS, RED);
+                        }
+
+                        for (int j = 0; j < atoms[i].subatomTier[1] + atoms[i].subatomTier[0]; j++) {
+                            float theta = j * ((2 * std::numbers::pi) / (atoms[i].subatomTier[1] + atoms[i].subatomTier[0]));
+
+                            vec::Vector2 pt = getPointOfCenter(vec::Vector2(atoms[i].pos.x, atoms[i].pos.y), NUCLEAR_FLOAT_RADIUS, theta);
+
+                            if (j < atoms[i].subatomTier[1]) { DrawCircleV(Vector2({pt.x, pt.y}), SUBATOMIC_RENDER_RADIUS, GRAY); }
+                            else { DrawCircleV(Vector2({pt.x, pt.y}), SUBATOMIC_RENDER_RADIUS, GREEN); }
+                        }
+                    } else {
+                        DrawCircleV(
+                            {atoms[i].pos.x, atoms[i].pos.y},
+                            ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS,
+                            GREEN
+                        );
+                    }
+                }
+
+                for (size_t i = 0; i < atoms.size(); i++) {
+                    // Add labels to each element
+                    Molecule& molecule = molecules[find(parent, i)];
+                    if (molecule.atomCount == 1) {
+                        const char* sym = atoms[i].element.c_str();
+                        int textWidth = MeasureText(sym, (int)settings.fontSize);
+                        DrawText(sym, atoms[i].pos.x - (textWidth / 2), atoms[i].pos.y + RELATIVE_TEXT_HEIGHT_SOLO, settings.fontSize, Fade(GRAY, 0.8f));
+                    } else if (!molecule.labelDrawn) {
+                        std::string form = molecule.formula;
+                        std::string label = "[ " + form + "]";
+                        const char* moleculeLabel = label.c_str();
+                        int textWidth = MeasureText(moleculeLabel, (int)settings.fontSize);
+                        DrawText(moleculeLabel, molecule.centeroid.x - (textWidth / 2), molecule.centeroid.y + RELATIVE_TEXT_HEIGHT_MOLECULE, settings.fontSize, Fade(GRAY, 0.8f));
+                        molecule.labelDrawn = true;
+                    }
+                }
+
+                if (showSettings) {
+                    int x = GuiWindowBox({0, 0, 600, 600}, "Settings");
+                    if (x) showSettings = !showSettings;
+                    GuiSlider(
+                        {150, 40, 300, 20}, 
+                        "Atomic Friction", 
+                        TextFormat("%.3f", settings.atomicFriction), 
+                        &settings.atomicFriction, 0.90f, 0.9999f
+                    );
+                    GuiSlider(
+                        {150, 70, 300, 20}, 
+                        "Force Strength", 
+                        TextFormat("%.3f", settings.forceStrength), 
+                        &settings.forceStrength, 0.0f, 1.0f
+                    );
+                    GuiSlider(
+                        {150, 100, 300, 20}, 
+                        "Force Minimum Distance", 
+                        TextFormat("%.f", settings.forceMinDist), 
+                        &settings.forceMinDist, 1.0f, 40.0f
+                    );
+                    GuiSlider(
+                        {150, 130, 300, 20}, 
+                        "Force Maximum Distance", 
+                        TextFormat("%.f", settings.forceMaxDist), 
+                        &settings.forceMaxDist, 10.0f, 200.0f
+                    );
+                    GuiSlider(
+                        {150, 160, 300, 20}, 
+                        "Bond Distance", 
+                        TextFormat("%.f", settings.bondDist), 
+                        &settings.bondDist, 5.0f, 40.0f
+                    );
+                    GuiSlider(
+                        {150, 190, 300, 20}, 
+                        "Decay Chance", 
+                        TextFormat("%.3f", settings.decayChance), 
+                        &settings.decayChance, 0.0f, 0.5f
+                    );
+                    GuiSlider(
+                        {150, 220, 300, 20}, 
+                        "Decay Proton Threshold", 
+                        TextFormat("%.f", settings.decayProtonThreshold), 
+                        &settings.decayProtonThreshold, 1.0f, 118.0f
+                    );
+                    GuiSlider(
+                        {150, 250, 300, 20}, 
+                        "Fusion Proton Max", 
+                        TextFormat("%.f", settings.fusionProtonMax), 
+                        &settings.fusionProtonMax, 2.0f, 118.0f
+                    );
+                    if (settings.simpleAtoms) GuiDisable();
+                    GuiSlider(
+                        {150, 280, 300, 20}, 
+                        "Electron Orbit Speed", 
+                        TextFormat("%.3f", settings.electronOrbitSpeed), 
+                        &settings.electronOrbitSpeed, 0.0f, 0.1f
+                    );
+                    if (settings.simpleAtoms) GuiEnable();
+                    GuiSlider(
+                        {150, 310, 300, 20}, 
+                        "Font Size", 
+                        TextFormat("%.f", settings.fontSize), 
+                        &settings.fontSize, 4.0f, 14.0f
+                    );
+                    GuiSlider(
+                        {150, 340, 300, 20}, 
+                        "Temperature", 
+                        TextFormat("%.3f", settings.temp), 
+                        &settings.temp, 0.0f, 3.0f
+                    );
+                    GuiCheckBox(
+                        {150, 370, 20, 20},
+                        "Simple Atoms (performance boost)",
+                        &settings.simpleAtoms
+                    );
+                }
+
+                if (GuiButton({710, 560, 70, 20}, "Settings")) {
+                    showSettings = !showSettings;
+                }
+
+                EndDrawing();
+                if (DEBUG_PROFILER) {
+                    auto endDrawProfiler = std::chrono::high_resolution_clock::now();
+                    auto microsecondsDrawProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endDrawProfiler - startDrawProfiler).count();
+                    if (frame % 60 == 0) cout << "PROFILER: DRAW: " << microsecondsDrawProfiler << "\n";
+                }
+
+                if (DEBUG_PROFILER) {
+                    auto endLoopProfiler = std::chrono::high_resolution_clock::now();
+                    auto microsecondsLoopProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endLoopProfiler - loopStartProfiler).count();
+                    if (frame % 60 == 0) cout << "PROFILER: LOOP: " << microsecondsLoopProfiler << "\n";
+                }
+
+                frame++;
+                break;
+            }
+            case PROTEIN_BUILDER: {
+                BeginDrawing();
+
+                ClearBackground(BLACK);
+                DrawText("Hello, world", 50, 50, 10, GRAY);
+
+                EndDrawing();
+
+                frame++;
+                break;
             }
         }
-
-        for (size_t i = 0; i < atoms.size(); i++) {
-            // Add labels to each element
-            Molecule& molecule = molecules[find(parent, i)];
-            if (molecule.atomCount == 1) {
-                const char* sym = atoms[i].element.c_str();
-                int textWidth = MeasureText(sym, (int)settings.fontSize);
-                DrawText(sym, atoms[i].pos.x - (textWidth / 2), atoms[i].pos.y + RELATIVE_TEXT_HEIGHT_SOLO, settings.fontSize, Fade(GRAY, 0.8f));
-            } else if (!molecule.labelDrawn) {
-                std::string form = molecule.formula;
-                std::string label = "[ " + form + "]";
-                const char* moleculeLabel = label.c_str();
-                int textWidth = MeasureText(moleculeLabel, (int)settings.fontSize);
-                DrawText(moleculeLabel, molecule.centeroid.x - (textWidth / 2), molecule.centeroid.y + RELATIVE_TEXT_HEIGHT_MOLECULE, settings.fontSize, Fade(GRAY, 0.8f));
-                molecule.labelDrawn = true;
-            }
-        }
-
-        if (showSettings) {
-            int x = GuiWindowBox({0, 0, 600, 600}, "Settings");
-            if (x) showSettings = !showSettings;
-            GuiSlider(
-                {150, 40, 300, 20}, 
-                "Atomic Friction", 
-                TextFormat("%.3f", settings.atomicFriction), 
-                &settings.atomicFriction, 0.90f, 0.9999f
-            );
-            GuiSlider(
-                {150, 70, 300, 20}, 
-                "Force Strength", 
-                TextFormat("%.3f", settings.forceStrength), 
-                &settings.forceStrength, 0.0f, 1.0f
-            );
-            GuiSlider(
-                {150, 100, 300, 20}, 
-                "Force Minimum Distance", 
-                TextFormat("%.f", settings.forceMinDist), 
-                &settings.forceMinDist, 1.0f, 40.0f
-            );
-            GuiSlider(
-                {150, 130, 300, 20}, 
-                "Force Maximum Distance", 
-                TextFormat("%.f", settings.forceMaxDist), 
-                &settings.forceMaxDist, 10.0f, 200.0f
-            );
-            GuiSlider(
-                {150, 160, 300, 20}, 
-                "Bond Distance", 
-                TextFormat("%.f", settings.bondDist), 
-                &settings.bondDist, 5.0f, 40.0f
-            );
-            GuiSlider(
-                {150, 190, 300, 20}, 
-                "Decay Chance", 
-                TextFormat("%.3f", settings.decayChance), 
-                &settings.decayChance, 0.0f, 0.5f
-            );
-            GuiSlider(
-                {150, 220, 300, 20}, 
-                "Decay Proton Threshold", 
-                TextFormat("%.f", settings.decayProtonThreshold), 
-                &settings.decayProtonThreshold, 1.0f, 118.0f
-            );
-            GuiSlider(
-                {150, 250, 300, 20}, 
-                "Fusion Proton Max", 
-                TextFormat("%.f", settings.fusionProtonMax), 
-                &settings.fusionProtonMax, 2.0f, 118.0f
-            );
-            if (settings.simpleAtoms) GuiDisable();
-            GuiSlider(
-                {150, 280, 300, 20}, 
-                "Electron Orbit Speed", 
-                TextFormat("%.3f", settings.electronOrbitSpeed), 
-                &settings.electronOrbitSpeed, 0.0f, 0.1f
-            );
-            if (settings.simpleAtoms) GuiEnable();
-            GuiSlider(
-                {150, 310, 300, 20}, 
-                "Font Size", 
-                TextFormat("%.f", settings.fontSize), 
-                &settings.fontSize, 4.0f, 14.0f
-            );
-            GuiSlider(
-                {150, 340, 300, 20}, 
-                "Temperature", 
-                TextFormat("%.3f", settings.temp), 
-                &settings.temp, 0.0f, 3.0f
-            );
-            GuiCheckBox(
-                {150, 370, 20, 20},
-                "Simple Atoms (performance boost)",
-                &settings.simpleAtoms
-            );
-        }
-
-        if (GuiButton({710, 560, 70, 20}, "Settings")) {
-            showSettings = !showSettings;
-        }
-
-        EndDrawing();
-        if (DEBUG_PROFILER) {
-            auto endDrawProfiler = std::chrono::high_resolution_clock::now();
-            auto microsecondsDrawProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endDrawProfiler - startDrawProfiler).count();
-            if (frame % 60 == 0) cout << "PROFILER: DRAW: " << microsecondsDrawProfiler << "\n";
-        }
-
-        if (DEBUG_PROFILER) {
-            auto endLoopProfiler = std::chrono::high_resolution_clock::now();
-            auto microsecondsLoopProfiler = std::chrono::duration_cast<std::chrono::microseconds>(endLoopProfiler - loopStartProfiler).count();
-            if (frame % 60 == 0) cout << "PROFILER: LOOP: " << microsecondsLoopProfiler << "\n";
-        }
-
-        frame++;
     }
     
     CloseWindow();
