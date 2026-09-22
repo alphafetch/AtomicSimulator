@@ -262,23 +262,31 @@ int main() {
         ClearBackground(BLACK);
         
         for (size_t i = 0; i < atoms.size(); i++) {
-            DrawCircleLinesV(Vector2({atoms[i].pos.x, atoms[i].pos.y}), ELECTRON_FLOAT_RADIUS, Fade(RED, 0.5f));            
-        
-            for (int j = 0; j < atoms[i].subatomTier[2]; j++) {
-                float theta = j * ((2 * std::numbers::pi) / atoms[i].subatomTier[2]) + frame * settings.electronOrbitSpeed;
+            if (!settings.simpleAtoms) {
+                DrawCircleLinesV(Vector2({atoms[i].pos.x, atoms[i].pos.y}), ELECTRON_FLOAT_RADIUS, Fade(RED, 0.5f));            
+            
+                for (int j = 0; j < atoms[i].subatomTier[2]; j++) {
+                    float theta = j * ((2 * std::numbers::pi) / atoms[i].subatomTier[2]) + frame * settings.electronOrbitSpeed;
 
-                vec::Vector2 pt = getPointOfCenter(vec::Vector2(atoms[i].pos.x, atoms[i].pos.y), ELECTRON_FLOAT_RADIUS, theta);
+                    vec::Vector2 pt = getPointOfCenter(vec::Vector2(atoms[i].pos.x, atoms[i].pos.y), ELECTRON_FLOAT_RADIUS, theta);
 
-                DrawCircleV(Vector2({pt.x, pt.y}), ELECTRON_RENDER_RADIUS, RED);
-            }
+                    DrawCircleV(Vector2({pt.x, pt.y}), ELECTRON_RENDER_RADIUS, RED);
+                }
 
-            for (int j = 0; j < atoms[i].subatomTier[1] + atoms[i].subatomTier[0]; j++) {
-                float theta = j * ((2 * std::numbers::pi) / (atoms[i].subatomTier[1] + atoms[i].subatomTier[0]));
+                for (int j = 0; j < atoms[i].subatomTier[1] + atoms[i].subatomTier[0]; j++) {
+                    float theta = j * ((2 * std::numbers::pi) / (atoms[i].subatomTier[1] + atoms[i].subatomTier[0]));
 
-                vec::Vector2 pt = getPointOfCenter(vec::Vector2(atoms[i].pos.x, atoms[i].pos.y), NUCLEAR_FLOAT_RADIUS, theta);
+                    vec::Vector2 pt = getPointOfCenter(vec::Vector2(atoms[i].pos.x, atoms[i].pos.y), NUCLEAR_FLOAT_RADIUS, theta);
 
-                if (j < atoms[i].subatomTier[1]) { DrawCircleV(Vector2({pt.x, pt.y}), SUBATOMIC_RENDER_RADIUS, GRAY); }
-                else { DrawCircleV(Vector2({pt.x, pt.y}), SUBATOMIC_RENDER_RADIUS, GREEN); }
+                    if (j < atoms[i].subatomTier[1]) { DrawCircleV(Vector2({pt.x, pt.y}), SUBATOMIC_RENDER_RADIUS, GRAY); }
+                    else { DrawCircleV(Vector2({pt.x, pt.y}), SUBATOMIC_RENDER_RADIUS, GREEN); }
+                }
+            } else {
+                DrawCircleV(
+                    {atoms[i].pos.x, atoms[i].pos.y},
+                    ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS,
+                    GREEN
+                );
             }
         }
 
@@ -350,12 +358,14 @@ int main() {
                 TextFormat("%.f", settings.fusionProtonMax), 
                 &settings.fusionProtonMax, 2.0f, 118.0f
             );
+            if (settings.simpleAtoms) GuiDisable();
             GuiSlider(
                 {150, 280, 300, 20}, 
                 "Electron Orbit Speed", 
                 TextFormat("%.3f", settings.electronOrbitSpeed), 
                 &settings.electronOrbitSpeed, 0.0f, 0.1f
             );
+            if (settings.simpleAtoms) GuiEnable();
             GuiSlider(
                 {150, 310, 300, 20}, 
                 "Font Size", 
@@ -367,6 +377,11 @@ int main() {
                 "Temperature", 
                 TextFormat("%.3f", settings.temp), 
                 &settings.temp, 0.0f, 3.0f
+            );
+            GuiCheckBox(
+                {150, 370, 20, 20},
+                "Simple Atoms (performance boost)",
+                &settings.simpleAtoms
             );
         }
 
