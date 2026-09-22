@@ -391,14 +391,42 @@ int main() {
         CloseWindow();
     } else if (currentScreen == PROTEIN_BUILDER) {
         SetWindowTitle(PROTEIN_BUILDER_WINDOW_TITLE);
+        auto elementTable = loadElementTable("data/elements.csv");
+        Settings settings;
         
         int frame = 0;
+        std::vector<Atom> atoms;
+        std::vector<int> protCounts = {1, 6, 7, 8, 15, 16};
+        std::vector<int> neutCounts = {0, 6, 7, 8, 16, 16};
+        ProteinBuilderStorage PBC;
+        Rectangle UIBounds(0, 560, 500, 40);
 
         while (!WindowShouldClose()) {
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !CheckCollisionPointRec(GetMousePosition(), UIBounds)) {
+                Vector2 pos = GetMousePosition();
+
+                Atom atom(
+                    pos.x, pos.y, 0.0f,
+                    0.0f, 0.0f, 0.0f,
+                    protCounts[PBC.activeElement], 
+                    protCounts[PBC.activeElement], 
+                    neutCounts[PBC.activeElement],
+                    (int)atoms.size(),
+                    elementTable
+                );
+
+                atoms.push_back(atom);
+            }
+
             BeginDrawing();
 
             ClearBackground(BLACK);
-            DrawText("Hello, world", 50, 50, 10, GRAY);
+
+            for (size_t i = 0; i < atoms.size(); i++) {
+                renderAtom(atoms[i], settings, frame);
+            }
+
+            GuiToggleGroup({5, 565, 80, 30}, "Hydrogen;Carbon;Nitrogen;Oxygen;Phosphorus;Sulfur", &PBC.activeElement);
 
             EndDrawing();
 

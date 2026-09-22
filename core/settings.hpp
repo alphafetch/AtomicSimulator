@@ -16,4 +16,8 @@ struct Settings {
     bool  simpleAtoms = false;
 };
 
+struct ProteinBuilderStorage {
+    int activeElement = 0;
+};
+
 #endif
