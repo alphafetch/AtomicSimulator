@@ -25,6 +25,6 @@
 //                4 - Molecule logging
 #define DEBUG_CONSOLE 0
 #define DEBUG_CSV 0
-#define DEBUG_PROFILER 1
+#define DEBUG_PROFILER 0
 
 #endif
