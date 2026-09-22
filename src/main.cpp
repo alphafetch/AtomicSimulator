@@ -24,6 +24,7 @@
 #include "../sim/utils.hpp"
 #include "../sim/bondFind.hpp"
 #include "../sim/molecule.hpp"
+#include "../sim/render.hpp"
 
 using std::cout;
 
@@ -268,32 +269,7 @@ int main() {
             ClearBackground(BLACK);
             
             for (size_t i = 0; i < atoms.size(); i++) {
-                if (!settings.simpleAtoms) {
-                    DrawCircleLinesV(Vector2({atoms[i].pos.x, atoms[i].pos.y}), ELECTRON_FLOAT_RADIUS, Fade(RED, 0.5f));            
-                
-                    for (int j = 0; j < atoms[i].subatomTier[2]; j++) {
-                        float theta = j * ((2 * std::numbers::pi) / atoms[i].subatomTier[2]) + frame * settings.electronOrbitSpeed;
-
-                        vec::Vector2 pt = getPointOfCenter(vec::Vector2(atoms[i].pos.x, atoms[i].pos.y), ELECTRON_FLOAT_RADIUS, theta);
-
-                        DrawCircleV(Vector2({pt.x, pt.y}), ELECTRON_RENDER_RADIUS, RED);
-                    }
-
-                    for (int j = 0; j < atoms[i].subatomTier[1] + atoms[i].subatomTier[0]; j++) {
-                        float theta = j * ((2 * std::numbers::pi) / (atoms[i].subatomTier[1] + atoms[i].subatomTier[0]));
-
-                        vec::Vector2 pt = getPointOfCenter(vec::Vector2(atoms[i].pos.x, atoms[i].pos.y), NUCLEAR_FLOAT_RADIUS, theta);
-
-                        if (j < atoms[i].subatomTier[1]) { DrawCircleV(Vector2({pt.x, pt.y}), SUBATOMIC_RENDER_RADIUS, GRAY); }
-                        else { DrawCircleV(Vector2({pt.x, pt.y}), SUBATOMIC_RENDER_RADIUS, GREEN); }
-                    }
-                } else {
-                    DrawCircleV(
-                        {atoms[i].pos.x, atoms[i].pos.y},
-                        ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS,
-                        GREEN
-                    );
-                }
+                renderAtom(atoms[i], settings, frame);
             }
 
             for (size_t i = 0; i < atoms.size(); i++) {
