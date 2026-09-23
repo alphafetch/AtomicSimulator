@@ -12,6 +12,8 @@ struct ProteinBuilderStorage {
     std::vector<std::pair<size_t, size_t>> bonds;
     std::unordered_map<int, Molecule> molecules;
     std::vector<int> parent;
+
+    void resizeParent(size_t s) { parent.resize(s); }
 };
 
 #endif

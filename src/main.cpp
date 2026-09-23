@@ -445,6 +445,7 @@ int main() {
                 );
 
                 atoms.push_back(atom);
+                PBS.resizeParent(atoms.size());
             }
 
             if (isCreatingBond) isCreatingBond = false;
@@ -474,8 +475,18 @@ int main() {
             }
 
             for (size_t i = 0; i < atoms.size(); i++) {
-                const char* elem = atoms[i].element.c_str();
-                drawCenteredLabel(atoms[i].pos.x, atoms[i].pos.y, elem, settings, RELATIVE_TEXT_HEIGHT_SOLO, Fade(GRAY, 0.8f));
+                Molecule& molecule = PBS.molecules[find(PBS.parent, i)];
+                if (molecule.atomCount == 1) {  
+                    const char* elem = atoms[i].element.c_str();
+                    drawCenteredLabel(atoms[i].pos.x, atoms[i].pos.y, elem, settings, RELATIVE_TEXT_HEIGHT_SOLO, Fade(GRAY, 0.8f));
+                } else {
+                    std::string form = molecule.formula;
+                    std::string label = "[ " + form + "]";
+                    if (molecule.isProtein) label += " - Prtn.";
+                    const char* moleculeLabel = label.c_str();
+                    molecule.labelDrawn = true;
+                    drawCenteredLabel(molecule.centeroid.x, molecule.centeroid.y, moleculeLabel, settings, RELATIVE_TEXT_HEIGHT_MOLECULE, Fade(GRAY, 0.8f));
+                }
             }
 
             GuiToggleGroup({5, 565, 80, 30}, "Hydrogen;Carbon;Nitrogen;Oxygen;Phosphorus;Sulfur", &PBS.activeElement);
