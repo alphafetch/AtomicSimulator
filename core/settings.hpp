@@ -2,6 +2,7 @@
 #define CORE_SETTINGS_HPP
 
 #include <vector>
+#include <unordered_map>
 
 struct Settings {
     float atomicFriction = 0.975f;
@@ -16,12 +17,6 @@ struct Settings {
     float electronOrbitSpeed = 0.015f;
     float fontSize = 8.0f;
     bool  simpleAtoms = false;
-};
-
-struct ProteinBuilderStorage {
-    int activeElement = 0;
-    int selectedAtomIndex = -1;
-    std::vector<std::pair<size_t, size_t>> bonds;
 };
 
 #endif

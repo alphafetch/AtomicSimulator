@@ -25,6 +25,7 @@
 #include "../sim/bondFind.hpp"
 #include "../sim/molecule.hpp"
 #include "../sim/render.hpp"
+#include "../sim/proteinBuilder.hpp"
 
 using std::cout;
 
@@ -422,7 +423,7 @@ int main() {
                             bond(parent, b.first, b.second);
                         }
                         
-                        buildMolecules(atoms, parent);
+                        PBC.molecules = buildMolecules(atoms, parent);
                     }
                 }
             }
