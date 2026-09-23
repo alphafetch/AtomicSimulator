@@ -485,7 +485,7 @@ int main() {
                     if (molecule.isProtein) label += " - Prtn.";
                     const char* moleculeLabel = label.c_str();
                     molecule.labelDrawn = true;
-                    drawCenteredLabel(molecule.centeroid.x, molecule.centeroid.y, moleculeLabel, settings, RELATIVE_TEXT_HEIGHT_MOLECULE, Fade(GRAY, 0.8f));
+                    drawCenteredLabel(molecule.centeroid.x, molecule.maxY, moleculeLabel, settings, RELATIVE_TEXT_HEIGHT_MOLECULE, Fade(GRAY, 0.8f));
                 }
             }
 

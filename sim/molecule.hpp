@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "atom.hpp"
+#include "../core/constants.hpp"
 
 struct Molecule {
     double mass = 0.0;
@@ -17,6 +18,7 @@ struct Molecule {
     vec::Vector2 centeroid;
     bool labelDrawn = false;
     bool isProtein = false;
+    float maxY = WINDOW_HEIGHT;
 };
 
 bool decideProtein(const std::map<std::string, int>& comp, int atomCount);

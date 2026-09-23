@@ -30,6 +30,7 @@ std::unordered_map<int, Molecule> buildMolecules(std::vector<Atom>& atoms, std::
         int root = find(parent, i);
 
         molecules[root].mass += atoms[i].mass;
+        molecules[root].maxY = atoms[i].pos.y < molecules[root].maxY ? atoms[i].pos.y : molecules[root].maxY;
 
         molecules[root].composition[atoms[i].element]++;
 
