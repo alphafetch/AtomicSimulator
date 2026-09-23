@@ -16,6 +16,7 @@ struct Molecule {
     int atomCount = 0;
     vec::Vector2 centeroid;
     bool labelDrawn = false;
+    bool isProtein = false;
 };
 
 std::unordered_map<int, Molecule> buildMolecules(std::vector<Atom>& atoms, std::vector<int>& parent);

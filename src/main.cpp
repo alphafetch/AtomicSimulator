@@ -412,6 +412,17 @@ int main() {
                         PBC.bonds.push_back(std::pair<size_t, size_t>{PBC.selectedAtomIndex, i});
                         PBC.selectedAtomIndex = -1;
                         isCreatingBond = true;
+
+                        std::vector<int> parent(atoms.size());
+                        for (size_t i = 0; i < parent.size(); i++) {
+                            parent[i] = i;
+                        }
+
+                        for (auto b : PBC.bonds) {
+                            bond(parent, b.first, b.second);
+                        }
+                        
+                        buildMolecules(atoms, parent);
                     }
                 }
             }
