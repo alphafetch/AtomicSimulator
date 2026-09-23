@@ -414,19 +414,19 @@ int main() {
                         PBS.bonds.push_back(std::pair<size_t, size_t>{PBS.selectedAtomIndex, i});
                         PBS.selectedAtomIndex = -1;
                         isCreatingBond = true;
-
-                        for (size_t i = 0; i < PBS.parent.size(); i++) {
-                            PBS.parent[i] = i;
-                        }
-
-                        for (auto b : PBS.bonds) {
-                            bond(PBS.parent, b.first, b.second);
-                        }
-                        
-                        PBS.molecules = buildMolecules(atoms, PBS.parent);
                     }
                 }
             }
+            
+            for (size_t i = 0; i < PBS.parent.size(); i++) {
+                PBS.parent[i] = i;
+            }
+
+            for (auto b : PBS.bonds) {
+                bond(PBS.parent, b.first, b.second);
+            }
+            
+            PBS.molecules = buildMolecules(atoms, PBS.parent);
 
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) 
                 && !CheckCollisionPointRec(GetMousePosition(), UIBounds)
@@ -476,7 +476,7 @@ int main() {
 
             for (size_t i = 0; i < atoms.size(); i++) {
                 Molecule& molecule = PBS.molecules[find(PBS.parent, i)];
-                if (molecule.atomCount == 1) {  
+                if (find(PBS.parent, i) == (int)i) {  
                     const char* elem = atoms[i].element.c_str();
                     drawCenteredLabel(atoms[i].pos.x, atoms[i].pos.y, elem, settings, RELATIVE_TEXT_HEIGHT_SOLO, Fade(GRAY, 0.8f));
                 } else {
