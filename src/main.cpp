@@ -415,16 +415,15 @@ int main() {
                         PBS.selectedAtomIndex = -1;
                         isCreatingBond = true;
 
-                        std::vector<int> parent(atoms.size());
-                        for (size_t i = 0; i < parent.size(); i++) {
-                            parent[i] = i;
+                        for (size_t i = 0; i < PBS.parent.size(); i++) {
+                            PBS.parent[i] = i;
                         }
 
                         for (auto b : PBS.bonds) {
-                            bond(parent, b.first, b.second);
+                            bond(PBS.parent, b.first, b.second);
                         }
                         
-                        PBS.molecules = buildMolecules(atoms, parent);
+                        PBS.molecules = buildMolecules(atoms, PBS.parent);
                     }
                 }
             }

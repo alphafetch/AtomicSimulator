@@ -11,6 +11,7 @@ struct ProteinBuilderStorage {
     int selectedAtomIndex = -1;
     std::vector<std::pair<size_t, size_t>> bonds;
     std::unordered_map<int, Molecule> molecules;
+    std::vector<int> parent;
 };
 
 #endif
