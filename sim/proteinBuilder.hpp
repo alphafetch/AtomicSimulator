@@ -13,7 +13,7 @@ struct ProteinBuilderStorage {
     std::unordered_map<int, Molecule> molecules;
     std::vector<int> parent;
 
-    void resizeParent(size_t s) { parent.resize(s); }
+    void resizeParent(size_t s);
 };
 
 #endif

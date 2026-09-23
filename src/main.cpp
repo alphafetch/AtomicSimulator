@@ -476,7 +476,7 @@ int main() {
 
             for (size_t i = 0; i < atoms.size(); i++) {
                 Molecule& molecule = PBS.molecules[find(PBS.parent, i)];
-                if (find(PBS.parent, i) == (int)i) {  
+                if (molecule.atomCount == 1) {  
                     const char* elem = atoms[i].element.c_str();
                     drawCenteredLabel(atoms[i].pos.x, atoms[i].pos.y, elem, settings, RELATIVE_TEXT_HEIGHT_SOLO, Fade(GRAY, 0.8f));
                 } else {
