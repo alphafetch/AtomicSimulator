@@ -397,7 +397,7 @@ int main() {
         std::vector<Atom> atoms;
         std::vector<int> protCounts = {1, 6, 7, 8, 15, 16};
         std::vector<int> neutCounts = {0, 6, 7, 8, 16, 16};
-        ProteinBuilderStorage PBC;
+        ProteinBuilderStorage PBS;
         Rectangle UIBounds(0, 560, 500, 40);
         bool isCreatingBond = false;
 
@@ -405,13 +405,13 @@ int main() {
             for (size_t i = 0; i < atoms.size(); i++) {
                 if (CheckCollisionPointCircle(GetMousePosition(), {atoms[i].pos.x, atoms[i].pos.y}, ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS)
                     && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                    if (PBC.selectedAtomIndex == -1) PBC.selectedAtomIndex = i;
-                    else if (PBC.selectedAtomIndex == i) {
-                        PBC.selectedAtomIndex = -1;
+                    if (PBS.selectedAtomIndex == -1) PBS.selectedAtomIndex = i;
+                    else if (PBS.selectedAtomIndex == i) {
+                        PBS.selectedAtomIndex = -1;
                         isCreatingBond = true;
                     } else {
-                        PBC.bonds.push_back(std::pair<size_t, size_t>{PBC.selectedAtomIndex, i});
-                        PBC.selectedAtomIndex = -1;
+                        PBS.bonds.push_back(std::pair<size_t, size_t>{PBS.selectedAtomIndex, i});
+                        PBS.selectedAtomIndex = -1;
                         isCreatingBond = true;
 
                         std::vector<int> parent(atoms.size());
@@ -419,27 +419,27 @@ int main() {
                             parent[i] = i;
                         }
 
-                        for (auto b : PBC.bonds) {
+                        for (auto b : PBS.bonds) {
                             bond(parent, b.first, b.second);
                         }
                         
-                        PBC.molecules = buildMolecules(atoms, parent);
+                        PBS.molecules = buildMolecules(atoms, parent);
                     }
                 }
             }
 
             if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) 
                 && !CheckCollisionPointRec(GetMousePosition(), UIBounds)
-                && PBC.selectedAtomIndex == -1
+                && PBS.selectedAtomIndex == -1
                 && !isCreatingBond) {
                 Vector2 pos = GetMousePosition();
 
                 Atom atom(
                     pos.x, pos.y, 0.0f,
                     0.0f, 0.0f, 0.0f,
-                    protCounts[PBC.activeElement], 
-                    protCounts[PBC.activeElement], 
-                    neutCounts[PBC.activeElement],
+                    protCounts[PBS.activeElement], 
+                    protCounts[PBS.activeElement], 
+                    neutCounts[PBS.activeElement],
                     (int)atoms.size(),
                     elementTable
                 );
@@ -453,7 +453,7 @@ int main() {
 
             ClearBackground(BLACK);
 
-            for (auto bond : PBC.bonds) {
+            for (auto bond : PBS.bonds) {
                 DrawLineEx(
                     {atoms[bond.first].pos.x, atoms[bond.first].pos.y}, 
                     {atoms[bond.second].pos.x, atoms[bond.second].pos.y},
@@ -464,7 +464,7 @@ int main() {
 
             for (size_t i = 0; i < atoms.size(); i++) {
                 renderAtom(atoms[i], settings, frame);
-                if (PBC.selectedAtomIndex == i) {
+                if (PBS.selectedAtomIndex == i) {
                     DrawCircleLinesV(
                         {atoms[i].pos.x, atoms[i].pos.y}, 
                         ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS + SELECT_RING_ADDITIONAL_RAD, 
@@ -478,7 +478,7 @@ int main() {
                 drawCenteredLabel(atoms[i].pos.x, atoms[i].pos.y, elem, settings, RELATIVE_TEXT_HEIGHT_SOLO, Fade(GRAY, 0.8f));
             }
 
-            GuiToggleGroup({5, 565, 80, 30}, "Hydrogen;Carbon;Nitrogen;Oxygen;Phosphorus;Sulfur", &PBC.activeElement);
+            GuiToggleGroup({5, 565, 80, 30}, "Hydrogen;Carbon;Nitrogen;Oxygen;Phosphorus;Sulfur", &PBS.activeElement);
 
             EndDrawing();
 
