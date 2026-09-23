@@ -3,7 +3,6 @@
 ## Requirements
 
 - A computer
-- A logs folder pre-created alongside the executable
 
 ## How to use
 
