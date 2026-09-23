@@ -1,6 +1,8 @@
 #ifndef CORE_SETTINGS_HPP
 #define CORE_SETTINGS_HPP
 
+#include <vector>
+
 struct Settings {
     float atomicFriction = 0.975f;
     float forceStrength = 0.2f;
@@ -18,6 +20,8 @@ struct Settings {
 
 struct ProteinBuilderStorage {
     int activeElement = 0;
+    int selectedAtomIndex = -1;
+    std::vector<std::pair<size_t, size_t>> bonds;
 };
 
 #endif

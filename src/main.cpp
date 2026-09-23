@@ -400,9 +400,28 @@ int main() {
         std::vector<int> neutCounts = {0, 6, 7, 8, 16, 16};
         ProteinBuilderStorage PBC;
         Rectangle UIBounds(0, 560, 500, 40);
+        bool isCreatingBond = false;
 
         while (!WindowShouldClose()) {
-            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !CheckCollisionPointRec(GetMousePosition(), UIBounds)) {
+            for (size_t i = 0; i < atoms.size(); i++) {
+                if (CheckCollisionPointCircle(GetMousePosition(), {atoms[i].pos.x, atoms[i].pos.y}, ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS)
+                    && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    if (PBC.selectedAtomIndex == -1) PBC.selectedAtomIndex = i;
+                    else if (PBC.selectedAtomIndex == i) {
+                        PBC.selectedAtomIndex = -1;
+                        isCreatingBond = true;
+                    } else {
+                        PBC.bonds.push_back(std::pair<size_t, size_t>{PBC.selectedAtomIndex, i});
+                        PBC.selectedAtomIndex = -1;
+                        isCreatingBond = true;
+                    }
+                }
+            }
+
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) 
+                && !CheckCollisionPointRec(GetMousePosition(), UIBounds)
+                && PBC.selectedAtomIndex == -1
+                && !isCreatingBond) {
                 Vector2 pos = GetMousePosition();
 
                 Atom atom(
@@ -418,12 +437,30 @@ int main() {
                 atoms.push_back(atom);
             }
 
+            if (isCreatingBond) isCreatingBond = false;
+
             BeginDrawing();
 
             ClearBackground(BLACK);
 
+            for (auto bond : PBC.bonds) {
+                DrawLineEx(
+                    {atoms[bond.first].pos.x, atoms[bond.first].pos.y}, 
+                    {atoms[bond.second].pos.x, atoms[bond.second].pos.y},
+                    BOND_THICKNESS,
+                    Fade(GRAY, 0.6f)
+                );
+            }
+
             for (size_t i = 0; i < atoms.size(); i++) {
                 renderAtom(atoms[i], settings, frame);
+                if (PBC.selectedAtomIndex == i) {
+                    DrawCircleLinesV(
+                        {atoms[i].pos.x, atoms[i].pos.y}, 
+                        ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS + SELECT_RING_ADDITIONAL_RAD, 
+                        WHITE
+                    );
+                }
             }
 
             GuiToggleGroup({5, 565, 80, 30}, "Hydrogen;Carbon;Nitrogen;Oxygen;Phosphorus;Sulfur", &PBC.activeElement);
