@@ -277,15 +277,13 @@ int main() {
                 Molecule& molecule = molecules[find(parent, i)];
                 if (molecule.atomCount == 1) {
                     const char* sym = atoms[i].element.c_str();
-                    int textWidth = MeasureText(sym, (int)settings.fontSize);
-                    DrawText(sym, atoms[i].pos.x - (textWidth / 2), atoms[i].pos.y + RELATIVE_TEXT_HEIGHT_SOLO, settings.fontSize, Fade(GRAY, 0.8f));
+                    drawCenteredLabel(atoms[i].pos.x, atoms[i].pos.y, sym, settings, RELATIVE_TEXT_HEIGHT_SOLO, Fade(GRAY, 0.8f));
                 } else if (!molecule.labelDrawn) {
                     std::string form = molecule.formula;
                     std::string label = "[ " + form + "]";
                     const char* moleculeLabel = label.c_str();
-                    int textWidth = MeasureText(moleculeLabel, (int)settings.fontSize);
-                    DrawText(moleculeLabel, molecule.centeroid.x - (textWidth / 2), molecule.centeroid.y + RELATIVE_TEXT_HEIGHT_MOLECULE, settings.fontSize, Fade(GRAY, 0.8f));
                     molecule.labelDrawn = true;
+                    drawCenteredLabel(molecule.centeroid.x, molecule.centeroid.y, moleculeLabel, settings, RELATIVE_TEXT_HEIGHT_MOLECULE, Fade(GRAY, 0.8f));
                 }
             }
 
@@ -461,6 +459,11 @@ int main() {
                         WHITE
                     );
                 }
+            }
+
+            for (size_t i = 0; i < atoms.size(); i++) {
+                const char* elem = atoms[i].element.c_str();
+                drawCenteredLabel(atoms[i].pos.x, atoms[i].pos.y, elem, settings, RELATIVE_TEXT_HEIGHT_SOLO, Fade(GRAY, 0.8f));
             }
 
             GuiToggleGroup({5, 565, 80, 30}, "Hydrogen;Carbon;Nitrogen;Oxygen;Phosphorus;Sulfur", &PBC.activeElement);

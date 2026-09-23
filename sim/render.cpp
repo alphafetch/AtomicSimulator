@@ -36,3 +36,8 @@ void renderAtom(const Atom& atom, const Settings& settings, int frame) {
         }
     }
 }
+
+void drawCenteredLabel(float x, float y, const char* text, const Settings& settings, int yOffset, Color color) {
+    int textWidth = MeasureText(text, (int)settings.fontSize);
+    DrawText(text, x - (textWidth / 2), y + yOffset, settings.fontSize, color);
+}
