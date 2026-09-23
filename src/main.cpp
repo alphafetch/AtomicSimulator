@@ -407,7 +407,7 @@ int main() {
                 if (CheckCollisionPointCircle(GetMousePosition(), {atoms[i].pos.x, atoms[i].pos.y}, ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS)
                     && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
                     if (PBS.selectedAtomIndex == -1) PBS.selectedAtomIndex = i;
-                    else if (PBS.selectedAtomIndex == i) {
+                    else if (PBS.selectedAtomIndex == (int)i) {
                         PBS.selectedAtomIndex = -1;
                         isCreatingBond = true;
                     } else {
@@ -465,7 +465,7 @@ int main() {
 
             for (size_t i = 0; i < atoms.size(); i++) {
                 renderAtom(atoms[i], settings, frame);
-                if (PBS.selectedAtomIndex == i) {
+                if (PBS.selectedAtomIndex == (int)i) {
                     DrawCircleLinesV(
                         {atoms[i].pos.x, atoms[i].pos.y}, 
                         ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS + SELECT_RING_ADDITIONAL_RAD, 
