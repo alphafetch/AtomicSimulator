@@ -19,6 +19,7 @@ struct Molecule {
     bool isProtein = false;
 };
 
+bool decideProtein(const std::map<std::string, int>& comp, int atomCount);
 std::unordered_map<int, Molecule> buildMolecules(std::vector<Atom>& atoms, std::vector<int>& parent);
  
 #endif
