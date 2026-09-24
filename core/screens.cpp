@@ -19,9 +19,12 @@ SimScreen MAINMenu() {
             return PROTEIN_BUILDER;
         }
 
+        if (GuiButton({10, 10, 120, 40}, "Quit")) {
+            break;
+        }
+
         EndDrawing();
     }
 
-    CloseWindow();
-    exit(EXIT_SUCCESS);
+    return QUIT;
 }
