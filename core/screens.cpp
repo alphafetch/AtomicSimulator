@@ -17,7 +17,7 @@ SimScreen MAINMenu() {
             return PROTEIN_BUILDER;
         }
 
-        if (GuiButton({10, 10, 120, 40}, "Quit")) {
+        if (GuiButton({10, 10, 50, 30}, "Quit")) {
             break;
         }
 
