@@ -415,10 +415,11 @@ SimScreen runProteinBuilder() {
     std::vector<int> protCounts = {1, 6, 7, 8, 15, 16};
     std::vector<int> neutCounts = {0, 6, 7, 8, 16, 16};
     ProteinBuilderStorage PBS;
-    Rectangle UIBounds(0, 560, 500, 40);
+    std::vector<Rectangle> UIBounds = {{0, 560, 500, 40}, {10, 10, 30, 30}};
     bool isCreatingBond = false;
 
     while (!WindowShouldClose()) {
+
         for (size_t i = 0; i < atoms.size(); i++) {
             if (CheckCollisionPointCircle(GetMousePosition(), {atoms[i].pos.x, atoms[i].pos.y}, ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS)
                 && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -444,8 +445,18 @@ SimScreen runProteinBuilder() {
         
         PBS.molecules = buildMolecules(atoms, PBS.parent);
 
+        bool isUIClick = false;
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            for (auto& bound : UIBounds) {
+                if (CheckCollisionPointRec(GetMousePosition(), bound)) {
+                    isUIClick = true;
+                    break;
+                }
+            }
+        }
+
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) 
-            && !CheckCollisionPointRec(GetMousePosition(), UIBounds)
+            && !isUIClick
             && PBS.selectedAtomIndex == -1
             && !isCreatingBond) {
             Vector2 pos = GetMousePosition();
