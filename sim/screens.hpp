@@ -5,6 +5,8 @@ typedef enum SimScreen {
     MAIN, ATOM_SIMULATION, PROTEIN_BUILDER, QUIT
 } SimScreen;
 
-SimScreen MAINMenu();
+SimScreen runMainMenu();
+SimScreen runAtomSimulator();
+SimScreen runProteinBuilder();
 
 #endif
