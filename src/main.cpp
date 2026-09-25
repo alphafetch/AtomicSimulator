@@ -17,6 +17,8 @@ int main() {
     do {
         if (currentScreen == MAIN) {
             currentScreen = runMainMenu();
+        } else if (currentScreen == BLANK_SIMULATION) {
+            currentScreen = runBlankAtomSimulator();
         } else if (currentScreen == ATOM_SIMULATION) {
             currentScreen = runAtomSimulator();
         } else if (currentScreen == PROTEIN_BUILDER) {

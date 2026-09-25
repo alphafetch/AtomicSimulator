@@ -16,9 +16,10 @@
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
-#define MAIN_WINDOW_TITLE "Simulator"
-#define ATOM_SIMULATOR_WINDOW_TITLE "Atomic Simulator"
-#define PROTEIN_BUILDER_WINDOW_TITLE "Protein Builder"
+#define MAIN_WINDOW_TITLE "[ Simulator ]"
+#define ATOM_SIMULATOR_WINDOW_TITLE "[ Atomic Simulator ]"
+#define PROTEIN_BUILDER_WINDOW_TITLE "[ Protein Builder ]"
+#define BLANK_SIMULATOR_WINDOW_TITLE "[ Blank Simulation ]"
 
 #define RELATIVE_TEXT_HEIGHT_SOLO -20
 #define RELATIVE_TEXT_HEIGHT_MOLECULE -35
