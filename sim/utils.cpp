@@ -39,3 +39,17 @@ vec::Vector2 getForceMagnitude(float dist, Atom a, Atom b, const Settings& setti
         return vec::Vector2(0.0f, 0.0f);
     }
 }
+
+std::filesystem::path getUserHomeDir() {
+    #if defined(_WIN32)
+    const char* home = std::getenv("USERPROFILE");
+    #else
+    const char* home = std::getenv("HOME");
+    #endif
+
+    if (!home) {
+        return "";
+    }
+
+    return std::filesystem::path(home);
+}

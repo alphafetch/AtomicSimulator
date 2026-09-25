@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <chrono>
+#include <filesystem>
 
 #include "raylib.h"
 #include "../external/raygui.h"
@@ -419,7 +420,7 @@ SimScreen runProteinBuilder() {
     std::vector<int> protCounts = {1, 6, 7, 8, 15, 16};
     std::vector<int> neutCounts = {0, 6, 7, 8, 16, 16};
     ProteinBuilderStorage PBS;
-    std::vector<Rectangle> UIBounds = {{0, 560, 500, 40}, {10, 10, 30, 30}};
+    std::vector<Rectangle> UIBounds = {{0, 560, 500, 40}, {10, 10, 30, 30}, {700, 10, 90, 60}};
     bool isCreatingBond = false;
 
     while (!WindowShouldClose()) {
@@ -522,6 +523,44 @@ SimScreen runProteinBuilder() {
 
         GuiToggleGroup({5, 565, 80, 30}, "Hydrogen;Carbon;Nitrogen;Oxygen;Phosphorus;Sulfur", &PBS.activeElement);
         bool main = GuiButton({10, 10, 30, 30}, "<");
+        if (!PBS.isSaving) PBS.isSaving = GuiButton({715, 10, 75, 25}, "Save");
+        else {
+            GuiTextBox({700, 10, 90, 25}, PBS.saveBuf, settings.fontSize, true);
+            bool save = GuiButton({700, 45, 90, 25}, "Save");
+            if (save && PBS.saveBuf && PBS.saveBuf[0] != '\0') {
+                std::filesystem::path home = getUserHomeDir();
+                std::filesystem::path fpath = home / "Simulator";
+
+                std::filesystem::create_directories(fpath);
+
+                std::string fname = std::string(PBS.saveBuf) + ".protein";
+                std::filesystem::path finalPath = fpath / fname;
+                std::ofstream proteinStream(finalPath);
+
+                if (!proteinStream.is_open()) {
+                    std::cerr << "Failed to initialize protein write at protein file.\n";
+                    exit(EXIT_FAILURE);
+                }
+
+                proteinStream << PBS.saveBuf << "\n";
+                proteinStream << atoms.size() << "\n"; 
+                for (size_t i = 0; i < atoms.size(); i++) {
+                    proteinStream
+                        << atoms[i].protons << ","
+                        << atoms[i].neutrons << ","
+                        << atoms[i].pos.x << ","
+                        << atoms[i].pos.y << "\n";
+                }
+                proteinStream << PBS.bonds.size() << "\n";
+                for (auto& bond : PBS.bonds) {
+                    proteinStream 
+                        << bond.first << ","
+                        << bond.second << "\n";
+                }
+
+                PBS.isSaving = false;
+            }
+        }
 
         EndDrawing();
 
