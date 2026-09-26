@@ -388,7 +388,8 @@ SimScreen runAtomSimulator() {
             showSettings = !showSettings;
         }
         
-        bool menu = GuiButton({10, 10, 30, 30}, "<");
+        bool menu = false;
+        if (!showSettings) menu = GuiButton({10, 10, 30, 30}, "<");
 
         EndDrawing();
 
@@ -680,7 +681,8 @@ SimScreen runBlankAtomSimulator() {
                     bond(parent, i, j);
                     float effectiveFusionMax = std::min(settings.fusionProtonMax * settings.temp, 118.0f);
                     if (atoms[i].protons + atoms[j].protons < effectiveFusionMax
-                        && (fusing[i] == false && fusing[j] == false)) {
+                        && (fusing[i] == false && fusing[j] == false
+                        && !settings.proteinMode)) {
                         toFuse.push_back(std::pair<size_t, size_t>{i, j});
                         fusing[i] = true;
                         fusing[j] = true;
@@ -902,13 +904,19 @@ SimScreen runBlankAtomSimulator() {
                 "Simple Atoms (performance boost)",
                 &settings.simpleAtoms
             );
+            GuiCheckBox(
+                {150, 400, 20, 20},
+                "Protein Mode (no fusion)",
+                &settings.proteinMode
+            );
         }
 
         if (GuiButton({710, 560, 70, 20}, "Settings")) {
             showSettings = !showSettings;
         }
         
-        bool menu = GuiButton({10, 10, 30, 30}, "<");
+        bool menu = false;
+        if (!showSettings) menu = GuiButton({10, 10, 30, 30}, "<");
         if (!showLoadScr) {
             if (GuiButton({715, 10, 75, 25}, "Load")) {
                 showLoadScr = true;
