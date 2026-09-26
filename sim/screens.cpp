@@ -527,7 +527,7 @@ SimScreen runProteinBuilder() {
         else {
             GuiTextBox({700, 10, 90, 25}, PBS.saveBuf, settings.fontSize, true);
             bool save = GuiButton({700, 45, 90, 25}, "Save");
-            if (save && PBS.saveBuf && PBS.saveBuf[0] != '\0') {
+            if (save && PBS.saveBuf[0] != '\0') {
                 std::filesystem::path home = getUserHomeDir();
                 std::filesystem::path fpath = home / "Simulator";
 
