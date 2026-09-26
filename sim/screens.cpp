@@ -5,6 +5,7 @@
 #include <iostream>
 #include <chrono>
 #include <filesystem>
+#include <cstdlib>
 
 #include "raylib.h"
 #include "../external/raygui.h"
@@ -20,6 +21,7 @@
 #include "../sim/molecule.hpp"
 #include "../sim/render.hpp"
 #include "../sim/proteinBuilder.hpp"
+#include "../sim/proteinFile.hpp"
 
 SimScreen runMainMenu() {
     SetWindowTitle(MAIN_WINDOW_TITLE);
@@ -559,6 +561,7 @@ SimScreen runProteinBuilder() {
                 }
 
                 PBS.isSaving = false;
+                PBS.saveBuf[0] = '\0';
             }
         }
 
@@ -609,9 +612,14 @@ SimScreen runBlankAtomSimulator() {
     // Other miscellaneous initializations
     int frame = 0;
     bool showSettings = false;
+    bool showLoadScr = false;
     std::vector<int> parent(atoms.size());
     std::vector<std::pair<size_t, size_t>> toFuse;
     std::vector<bool> fusing(atoms.size(), false);
+    int active = 0;
+    int scrinx = 0;
+    std::vector<std::string> proteins;
+    std::vector<std::pair<size_t, size_t>> loadedBonds;
 
     while (!WindowShouldClose()) {
         std::chrono::high_resolution_clock::time_point loopStartProfiler;
@@ -623,6 +631,11 @@ SimScreen runBlankAtomSimulator() {
         for (size_t i = 0; i < parent.size(); i++) {
             parent[i] = i;
         }
+
+        for (size_t i = 0; i < loadedBonds.size(); i++) {
+            bond(parent, loadedBonds[i].first, loadedBonds[i].second);
+        }
+        loadedBonds.clear();
         
         for (size_t i = 0; i < fusing.size(); i++) {
             fusing[i] = false;
@@ -896,6 +909,83 @@ SimScreen runBlankAtomSimulator() {
         }
         
         bool menu = GuiButton({10, 10, 30, 30}, "<");
+        if (!showLoadScr) {
+            if (GuiButton({715, 10, 75, 25}, "Load")) {
+                showLoadScr = true;
+                proteins = listSavedProteins();
+            }
+        } else {
+            int x = GuiWindowBox({0, 0, 800, 600}, "Load Protein");
+            if (x) showLoadScr = !showLoadScr;
+
+            std::string protString = convertToJoinedList(proteins);
+            GuiListView({300, 30, 200, 530}, protString.c_str(), &scrinx, &active);
+
+            if (GuiButton({300, 570, 200, 20}, "Load")) {
+                std::string filename = proteins[active];
+                std::string file = filename + ".protein";
+                std::filesystem::path path = getUserHomeDir() / "Simulator" / file;
+
+                std::ifstream fp(path);
+                if (!fp.is_open()) {
+                    std::cerr << "File failed to open.\n";
+                    exit(EXIT_FAILURE);
+                }
+
+                int i = 0;
+                std::string line;
+                int atomCount;
+                while (std::getline(fp, line)) {
+                    if (i == 0) { i++; continue; } // TODO: Make label be the label of the protein in sim
+                    if (i == 1) { 
+                        atomCount = std::stoi(line);
+                        i++;
+                        continue;
+                    }
+
+                    if (i <= atomCount + 1) {
+                        std::stringstream ss(line);
+                        std::string field;
+
+                        std::getline(ss, field, ',');
+                        int p = std::stoi(field);
+                        std::getline(ss, field, ',');
+                        int n = std::stoi(field);
+                        std::getline(ss, field, ',');
+                        float x = std::stof(field);
+                        std::getline(ss, field, ',');
+                        float y = std::stof(field);
+
+                        atoms.push_back(Atom{x, y, 0.0f, 0.0f, 0.0f, 0.0f, p, p, n, (int)atoms.size(), elementTable});
+                        i++;
+                        continue;
+                    }
+
+                    if (i == atomCount + 2) {
+                        i++;
+                        continue;
+                    }
+
+                    if (i >= atomCount + 3) {
+                        std::stringstream ss(line);
+                        std::string field;
+
+                        std::getline(ss, field, ',');
+                        int j = std::stoi(field);
+                        std::getline(ss, field, ',');
+                        int k = std::stoi(field);
+
+                        loadedBonds.push_back(std::pair<int, int>{j, k});
+                        i++;
+                        continue;
+                    }
+                }
+
+                showLoadScr = false;
+                parent.resize(atoms.size());
+                fusing.resize(atoms.size(), false);
+            }
+        }
 
         EndDrawing();
 
