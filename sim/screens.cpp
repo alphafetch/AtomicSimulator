@@ -351,12 +351,14 @@ SimScreen runAtomSimulator() {
                 TextFormat("%.f", settings.decayProtonThreshold), 
                 &settings.decayProtonThreshold, 1.0f, 118.0f
             );
+            if (settings.proteinMode) GuiDisable();
             GuiSlider(
                 {150, 250, 300, 20}, 
                 "Fusion Proton Max", 
                 TextFormat("%.f", settings.fusionProtonMax), 
                 &settings.fusionProtonMax, 2.0f, 118.0f
             );
+            if (settings.proteinMode) GuiEnable();
             if (settings.simpleAtoms) GuiDisable();
             GuiSlider(
                 {150, 280, 300, 20}, 
