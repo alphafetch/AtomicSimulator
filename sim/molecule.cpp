@@ -54,7 +54,7 @@ std::unordered_map<int, Molecule> buildMolecules(std::vector<Atom>& atoms, std::
         }
 
         m.formula = compStr;
-        m.isProtein = decideProtein(m.composition, m.atomCount);
+        m.isProtein = decideProtein(m.composition, m.atomCount); // Converts to one
 
         m.centeroid = vec::Vector2(m.posSum.x / m.atomCount, m.posSum.y / m.atomCount);
     }

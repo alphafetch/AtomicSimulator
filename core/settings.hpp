@@ -17,8 +17,9 @@ struct Settings {
     float electronOrbitSpeed = 0.015f;
     float fontSize = 8.0f;
     
-    bool  simpleAtoms = false;
-    bool  proteinMode = false;
+    bool  simpleAtoms  = false;
+    bool  proteinMode  = false;
+    bool  membraneMode = false;
 };
 
 #endif

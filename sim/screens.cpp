@@ -299,7 +299,7 @@ SimScreen runAtomSimulator() {
             } else if (!molecule.labelDrawn) {
                 std::string form = molecule.formula;
                 std::string label = "[ " + form + "]";
-                if (molecule.isProtein) label += " - Prtn.";
+                if (molecule.isProtein == 1) label += " - Prtn.";
                 const char* moleculeLabel = label.c_str();
                 molecule.labelDrawn = true;
                 drawCenteredLabel(molecule.centeroid.x, molecule.centeroid.y, moleculeLabel, settings, RELATIVE_TEXT_HEIGHT_MOLECULE, Fade(GRAY, 0.8f));
@@ -425,67 +425,128 @@ SimScreen runProteinBuilder() {
     std::vector<int> protCounts = {1, 6, 7, 8, 15, 16};
     std::vector<int> neutCounts = {0, 6, 7, 8, 16, 16};
     ProteinBuilderStorage PBS;
-    std::vector<Rectangle> UIBounds = {{0, 560, 500, 40}, {10, 10, 30, 30}, {700, 10, 90, 60}};
+    std::vector<Rectangle> UIBounds = {{0, 560, 500, 40}, 
+                                       {10, 10, 30, 30}, 
+                                       {700, 10, 90, 60}, 
+                                       {10, 540, 20, 20}, 
+                                       {10, 510, 80, 20}
+                                      };
     bool isCreatingBond = false;
+    int lastPlacedIndex = -1;
+    int firstPlacedIndex = -1;
+    bool firstPlacement = true;
+    bool closeLoop = false;
+    bool placementEnabled = true;
 
     while (!WindowShouldClose()) {
-
-        for (size_t i = 0; i < atoms.size(); i++) {
-            if (CheckCollisionPointCircle(GetMousePosition(), {atoms[i].pos.x, atoms[i].pos.y}, ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS)
-                && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                if (PBS.selectedAtomIndex == -1) PBS.selectedAtomIndex = i;
-                else if (PBS.selectedAtomIndex == (int)i) {
-                    PBS.selectedAtomIndex = -1;
-                    isCreatingBond = true;
-                } else {
-                    PBS.bonds.push_back(std::pair<size_t, size_t>{PBS.selectedAtomIndex, i});
-                    PBS.selectedAtomIndex = -1;
-                    isCreatingBond = true;
+        if (!settings.membraneMode) {
+            for (size_t i = 0; i < atoms.size(); i++) {
+                if (CheckCollisionPointCircle(GetMousePosition(), {atoms[i].pos.x, atoms[i].pos.y}, ELECTRON_FLOAT_RADIUS + ELECTRON_RENDER_RADIUS)
+                    && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    if (PBS.selectedAtomIndex == -1) PBS.selectedAtomIndex = i;
+                    else if (PBS.selectedAtomIndex == (int)i) {
+                        PBS.selectedAtomIndex = -1;
+                        isCreatingBond = true;
+                    } else {
+                        PBS.bonds.push_back(std::pair<size_t, size_t>{PBS.selectedAtomIndex, i});
+                        PBS.selectedAtomIndex = -1;
+                        isCreatingBond = true;
+                    }
                 }
             }
-        }
-        
-        for (size_t i = 0; i < PBS.parent.size(); i++) {
-            PBS.parent[i] = i;
-        }
+            
+            for (size_t i = 0; i < PBS.parent.size(); i++) {
+                PBS.parent[i] = i;
+            }
 
-        for (auto b : PBS.bonds) {
-            bond(PBS.parent, b.first, b.second);
-        }
-        
-        PBS.molecules = buildMolecules(atoms, PBS.parent);
+            for (auto b : PBS.bonds) {
+                bond(PBS.parent, b.first, b.second);
+            }
+            
+            PBS.molecules = buildMolecules(atoms, PBS.parent);
 
-        bool isUIClick = false;
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-            for (auto& bound : UIBounds) {
-                if (CheckCollisionPointRec(GetMousePosition(), bound)) {
-                    isUIClick = true;
-                    break;
+            bool isUIClick = false;
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                for (auto& bound : UIBounds) {
+                    if (CheckCollisionPointRec(GetMousePosition(), bound)) {
+                        isUIClick = true;
+                        break;
+                    }
                 }
             }
+
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) 
+                && !isUIClick
+                && PBS.selectedAtomIndex == -1
+                && !isCreatingBond) {
+                Vector2 pos = GetMousePosition();
+
+                Atom atom(
+                    pos.x, pos.y, 0.0f,
+                    0.0f, 0.0f, 0.0f,
+                    protCounts[PBS.activeElement], 
+                    protCounts[PBS.activeElement], 
+                    neutCounts[PBS.activeElement],
+                    (int)atoms.size(),
+                    elementTable
+                );
+
+                atoms.push_back(atom);
+                PBS.resizeParent(atoms.size());
+                firstPlacement = false;
+            }
+
+            if (isCreatingBond) isCreatingBond = false;
+        } else {
+            bool isUIClick = false;
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                for (auto& bound : UIBounds) {
+                    if (CheckCollisionPointRec(GetMousePosition(), bound)) {
+                        isUIClick = true;
+                        break;
+                    }
+                }
+            }
+
+            for (size_t i = 0; i < PBS.parent.size(); i++) {
+                PBS.parent[i] = i;
+            }
+
+            for (auto b : PBS.bonds) {
+                bond(PBS.parent, b.first, b.second);
+            }
+            
+            PBS.molecules = buildMolecules(atoms, PBS.parent);
+
+            if (closeLoop) {
+                PBS.bonds.push_back(std::pair<size_t, size_t>{(size_t)firstPlacedIndex, (size_t)lastPlacedIndex});
+                closeLoop = false;
+                placementEnabled = false;
+                PBS.isMembrane = true;
+            } else if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) 
+                && !isUIClick
+                && placementEnabled) {
+                Vector2 pos = GetMousePosition();
+
+                Atom atom(
+                    pos.x, pos.y, 0.0f,
+                    0.0f, 0.0f, 0.0f,
+                    protCounts[PBS.activeElement], 
+                    protCounts[PBS.activeElement], 
+                    neutCounts[PBS.activeElement],
+                    (int)atoms.size(),
+                    elementTable
+                );
+
+                atoms.push_back(atom);
+                PBS.resizeParent(atoms.size());
+
+                if (lastPlacedIndex == -1) { lastPlacedIndex = atom.id; firstPlacedIndex = atom.id; }
+                else { PBS.bonds.push_back(std::pair<size_t, size_t>{(size_t)lastPlacedIndex, (size_t)atom.id}); lastPlacedIndex = atom.id; }
+
+                firstPlacement = false;
+            }
         }
-
-        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) 
-            && !isUIClick
-            && PBS.selectedAtomIndex == -1
-            && !isCreatingBond) {
-            Vector2 pos = GetMousePosition();
-
-            Atom atom(
-                pos.x, pos.y, 0.0f,
-                0.0f, 0.0f, 0.0f,
-                protCounts[PBS.activeElement], 
-                protCounts[PBS.activeElement], 
-                neutCounts[PBS.activeElement],
-                (int)atoms.size(),
-                elementTable
-            );
-
-            atoms.push_back(atom);
-            PBS.resizeParent(atoms.size());
-        }
-
-        if (isCreatingBond) isCreatingBond = false;
 
         BeginDrawing();
 
@@ -519,7 +580,8 @@ SimScreen runProteinBuilder() {
             } else {
                 std::string form = molecule.formula;
                 std::string label = "[ " + form + "]";
-                if (molecule.isProtein) label += " - Prtn.";
+                if (molecule.isProtein && !PBS.isMembrane) label += " - Prtn.";
+                if (PBS.isMembrane) label += " - Membrane";
                 const char* moleculeLabel = label.c_str();
                 molecule.labelDrawn = true;
                 drawCenteredLabel(molecule.centeroid.x, molecule.maxY, moleculeLabel, settings, RELATIVE_TEXT_HEIGHT_MOLECULE, Fade(GRAY, 0.8f));
@@ -527,6 +589,12 @@ SimScreen runProteinBuilder() {
         }
 
         GuiToggleGroup({5, 565, 80, 30}, "Hydrogen;Carbon;Nitrogen;Oxygen;Phosphorus;Sulfur", &PBS.activeElement);
+        if (!firstPlacement) GuiDisable();
+        GuiCheckBox({10, 540, 20, 20}, "Membrane Mode", &settings.membraneMode);
+        if (!firstPlacement) GuiEnable();
+        if (settings.membraneMode && firstPlacedIndex != lastPlacedIndex) {
+            closeLoop = GuiButton({10, 510, 80, 20}, "Close Loop");
+        }
         bool main = GuiButton({10, 10, 30, 30}, "<");
         if (!PBS.isSaving) PBS.isSaving = GuiButton({715, 10, 75, 25}, "Save");
         else {
@@ -823,7 +891,7 @@ SimScreen runBlankAtomSimulator() {
             } else if (!molecule.labelDrawn) {
                 std::string form = molecule.formula;
                 std::string label = "[ " + form + "]";
-                if (molecule.isProtein) label += " - Prtn.";
+                if (molecule.isProtein == 1) label += " - Prtn.";
                 const char* moleculeLabel = label.c_str();
                 molecule.labelDrawn = true;
                 drawCenteredLabel(molecule.centeroid.x, molecule.centeroid.y, moleculeLabel, settings, RELATIVE_TEXT_HEIGHT_MOLECULE, Fade(GRAY, 0.8f));

@@ -14,6 +14,7 @@ struct ProteinBuilderStorage {
     std::vector<int> parent;
     bool isSaving = false;
     char saveBuf[128] = "";
+    bool isMembrane = false;
 
     void resizeParent(size_t s);
 };
